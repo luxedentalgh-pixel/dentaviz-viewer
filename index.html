@@ -843,6 +843,7 @@ var TEETH={};             // fdi -> {mesh, mat, origC, pos, size}
 var GUM=null;             // THREE.Group
 var SEL_RING=null;        // unused — kept for compat
 var SEL_OUTLINE=null;     // outline clone of selected tooth
+var SEL_LIGHT=null;       // accent point light on selected tooth
 var ff=0,ft=0;
 var modelBox=new THREE.Box3(), modelCtr=new THREE.Vector3(), modelRad=1;
 var modelLoaded=false;
@@ -1030,9 +1031,18 @@ function loadGLB(arrayBuffer, fileName){
     MODEL=gltf.scene;
     var totalTris=0;
 
-    /* Traverse: find all meshes, tag by parent node name (FDI) */
+    /* Traverse: find all meshes, tag by parent node name (FDI).
+       HIDE jaw bone meshes — they are 3D-print sockets, not gum tissue.
+       Synthetic gum is built from tooth centroids instead. */
+    var JAW_NAMES=['upper_jaw','lowwer_jaw','lower_jaw','jaw','bone','socket'];
     MODEL.traverse(function(node){
       if(node.isMesh){
+        var nm=node.name.toLowerCase();
+        var isJaw=JAW_NAMES.some(function(j){ return nm.indexOf(j)>-1; });
+        if(isJaw){
+          node.visible=false; // hide bone mesh
+          return;
+        }
         node.castShadow=true;
         node.receiveShadow=true;
         if(node.geometry && node.geometry.index)
@@ -1160,16 +1170,18 @@ function applyOne(f){
     }
   }
 
-  /* X-ray — realistic translucent enamel */
-  mat.transparent=S.xray||false;
-  mat.opacity=S.xray?0.28:1.0;
-  mat.depthWrite=!S.xray;
+  /* X-ray — ghost teeth */
+  mat.transparent = S.xray||false;
+  mat.opacity     = S.xray ? 0.22 : 1.0;
+  mat.depthWrite  = !S.xray;
   if(S.xray){
-    mat.color.setRGB(0.7,0.88,1.0);
-    mat.roughness=0.05; mat.metalness=0.0;
-    if(mat.clearcoat!=null) mat.clearcoat=0.0;
-    if(mat.emissive) mat.emissive.setRGB(0.04,0.12,0.22);
+    mat.color.setRGB(0.65,0.85,1.0);
+    mat.roughness=0.04; mat.metalness=0.0;
+    if(mat.clearcoat!=null){ mat.clearcoat=0.6; mat.clearcoatRoughness=0.05; }
+    if(mat.emissive) mat.emissive.setRGB(0.06,0.15,0.28);
+    mat.side=THREE.DoubleSide;
   } else {
+    mat.side=THREE.FrontSide;
     if(mat.emissive && S.sel!==f) mat.emissive.setRGB(0,0,0);
   }
 
@@ -1192,24 +1204,23 @@ function applyOne(f){
 
   mat.needsUpdate=true;
 
-  /* Explode — move each tooth radially outward from arch centre */
+  /* Explode — animate each tooth radially outward */
   if(t.mesh && t.mesh.parent && t.pos){
     var node=t.mesh.parent;
-    if(!t.homePos){
-      t.homePos={x:node.position.x,y:node.position.y,z:node.position.z};
+    if(t.homePos===undefined){
+      t.homePos=node.position.clone();
     }
     if(S.explode){
-      /* Direction from arch centre (modelCtr) to tooth centroid */
       var dx=t.pos.x-modelCtr.x, dy=t.pos.y-modelCtr.y, dz=t.pos.z-modelCtr.z;
       var len=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
-      var factor=modelRad*0.7;
+      var factor=modelRad*0.85;
+      /* Primary radial push + slight vertical separation */
+      var archY = archOf(f)==='upper' ? modelRad*0.3 : -modelRad*0.3;
       node.position.x=t.homePos.x+dx/len*factor;
-      node.position.y=t.homePos.y+dy/len*factor*0.5;
+      node.position.y=t.homePos.y+dy/len*factor*0.4+archY;
       node.position.z=t.homePos.z+dz/len*factor;
     } else {
-      node.position.x=t.homePos.x;
-      node.position.y=t.homePos.y;
-      node.position.z=t.homePos.z;
+      node.position.copy(t.homePos);
     }
   }
 }
@@ -1219,52 +1230,77 @@ function applyAll(){ALL.forEach(applyOne);}
 function buildGum(){
   if(GUM){scn.remove(GUM);GUM.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});GUM=null;}
   if(!S.gum||!modelLoaded) return;
+  if(Object.keys(TEETH).length===0) return; /* no teeth mapped yet */
 
   var gumMat=new THREE.MeshPhysicalMaterial({
-    color:new THREE.Color(0.82,0.38,0.46),
-    roughness:0.62, metalness:0.0,
-    clearcoat:0.35, clearcoatRoughness:0.35,
-    envMapIntensity:0.5
+    color:new THREE.Color(0.88,0.52,0.58),
+    roughness:0.55, metalness:0.0,
+    clearcoat:0.45, clearcoatRoughness:0.28,
+    envMapIntensity:0.6,
+    transparent: S.roots,
+    opacity: S.roots ? 0.28 : 1.0,
+    depthWrite: !S.roots
   });
 
   /* Build gum spine from tooth centroids at the CERVICAL level.
      Upper teeth: cervical is at bottom of tooth (min Y of bounding box).
      Lower teeth: cervical is at top of tooth (max Y of bounding box).
      Gum tube follows those points + small inward offset. */
-  function makeGumCurve(fdis){
+  /* Build gum from actual tooth bounding boxes.
+     Cervical margin = bottom of upper teeth / top of lower teeth.
+     Use BOTH a tube AND a flat pad to look like real soft tissue. */
+  function makeGumLine(fdis, arch){
     var pts=[];
     fdis.forEach(function(f){
-      var t=TEETH[f]; if(!t||!t.pos) return;
+      var t=TEETH[f]; if(!t||!t.mesh) return;
       var box=new THREE.Box3().setFromObject(t.mesh);
-      var cervY = archOf(f)==='upper' ? box.min.y : box.max.y;
-      // offset slightly away from teeth centre (inward, toward palate/tongue)
-      // archCentreZ ≈ modelCtr.z - small offset toward back for upper, front for lower
+      /* Cervical Y: where gum meets tooth — 20% up from crown tip */
+      var cervY = arch==='upper'
+        ? box.min.y + (box.max.y-box.min.y)*0.18
+        : box.max.y - (box.max.y-box.min.y)*0.18;
       pts.push(new THREE.Vector3(t.pos.x, cervY, t.pos.z));
     });
     if(pts.length<3) return null;
-    // Sort by X so spline doesn't cross over
     pts.sort(function(a,b){return a.x-b.x;});
-    return new THREE.CatmullRomCurve3(pts,false,'catmullrom',0.5);
+    return new THREE.CatmullRomCurve3(pts,false,'catmullrom',0.4);
   }
 
   var upperFDIs=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
   var lowerFDIs=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 
   GUM=new THREE.Group();
-  var tubeR=modelRad*0.04;
+  /* Tube radius = 3.5% of model radius — tight, anatomical */
+  var tubeR=modelRad*0.035;
 
-  [upperFDIs,lowerFDIs].forEach(function(fdis){
-    var curve=makeGumCurve(fdis);
-    if(!curve||curve.points.length<3) return;
-    var tube=new THREE.TubeGeometry(curve,100,tubeR,14,false);
+  var archDefs=[
+    {fdis:upperFDIs, arch:'upper'},
+    {fdis:lowerFDIs, arch:'lower'}
+  ];
+
+  archDefs.forEach(function(def){
+    var curve=makeGumLine(def.fdis, def.arch);
+    if(!curve) return;
+
+    /* Labial/buccal gum tube — the visible gum line */
+    var tube=new THREE.TubeGeometry(curve,120,tubeR,18,false);
     var m=new THREE.Mesh(tube,gumMat.clone());
     m.castShadow=true; m.receiveShadow=true;
     GUM.add(m);
-  });
 
-  if(S.explode){
-    /* split upper/lower gum groups along with teeth */
-  }
+    /* Palatal/lingual tube — gives depth to gum tissue */
+    /* Offset points slightly inward (toward arch center) */
+    var innerPts=curve.points.map(function(p){
+      var dx=p.x-modelCtr.x, dz=p.z-modelCtr.z;
+      var len=Math.sqrt(dx*dx+dz*dz)||1;
+      var inset=modelRad*0.04;
+      return new THREE.Vector3(p.x-dx/len*inset, p.y, p.z-dz/len*inset);
+    });
+    var innerCurve=new THREE.CatmullRomCurve3(innerPts,false,'catmullrom',0.4);
+    var innerTube=new THREE.TubeGeometry(innerCurve,120,tubeR*0.7,14,false);
+    var mi=new THREE.Mesh(innerTube,gumMat.clone());
+    mi.castShadow=true; mi.receiveShadow=true;
+    GUM.add(mi);
+  });
 
   scn.add(GUM);
 }
@@ -1382,7 +1418,15 @@ function selTooth(f){
       scn.add(SEL_OUTLINE);
       SEL_OUTLINE.position.copy(t.pos||new THREE.Vector3());
     }
-    /* Also emit emissive glow on the tooth */
+    /* Bright accent light at selected tooth */
+  if(SEL_LIGHT){ scn.remove(SEL_LIGHT); SEL_LIGHT=null; }
+  if(t && t.pos){
+    SEL_LIGHT=new THREE.PointLight(0x60a5fa, 2.5, modelRad*0.8, 2);
+    SEL_LIGHT.position.copy(t.pos);
+    SEL_LIGHT.position.y += modelRad*0.1;
+    scn.add(SEL_LIGHT);
+  }
+  /* Also emit emissive glow on the tooth */
     if(t.mat && t.mat.emissive) t.mat.emissive.setRGB(0.1,0.25,0.55);
   }
 
@@ -1429,6 +1473,7 @@ function selTooth(f){
 window.clearSel=function(){
   S.sel=null;
   if(SEL_OUTLINE){ if(SEL_OUTLINE.parent) SEL_OUTLINE.parent.remove(SEL_OUTLINE); else scn.remove(SEL_OUTLINE); SEL_OUTLINE=null; }
+  if(SEL_LIGHT){ scn.remove(SEL_LIGHT); SEL_LIGHT=null; }
   /* Remove emissive from previously selected tooth */
   if(S.sel && TEETH[S.sel] && TEETH[S.sel].mat && TEETH[S.sel].mat.emissive) TEETH[S.sel].mat.emissive.setRGB(0,0,0);
   hide('hud'); hide('te-editor'); show('te-empty');
@@ -1543,9 +1588,11 @@ window.tgl=function(opt,el){
   if(opt==='gum'){
     buildGum();
   } else if(opt==='xray'){
-    scn.background.set(S.xray?0x000814:0x07090f);
-    if(scn.fog) scn.fog.density=S.xray?0:0.018;
-    rnd.sortObjects=S.xray;
+    scn.background.set(S.xray?0x000c1a:0x07090f);
+    if(scn.fog){ scn.fog.color.set(S.xray?0x001830:0x07090f); scn.fog.density=S.xray?0.008:0.018; }
+    rnd.sortObjects=true; /* always sort for correct transparency */
+    /* Dim main lights in xray mode for cleaner look */
+    scn.traverse(function(o){ if(o.isDirectionalLight){ o.userData._baseInt=o.userData._baseInt||o.intensity; o.intensity=S.xray?o.userData._baseInt*0.4:o.userData._baseInt; } });
     applyAll();
   } else if(opt==='roots'){
     if(GUM){ GUM.traverse(function(o){
