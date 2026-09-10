@@ -625,22 +625,70 @@ var SEL_RING=null;        // the ONE selection ring, repositioned on select
 var ff=0,ft=0;
 var modelBox=new THREE.Box3(), modelCtr=new THREE.Vector3(), modelRad=1;
 var modelLoaded=false;
+var CONTACT_SHADOW=null;
 
 /* init */
+function makeStudioEnvTexture(){
+  /* Custom high-quality studio environment: soft gradient sky + two
+     bright softbox panels (front-top, side) for realistic enamel
+     highlights — sharper and more controllable than RoomEnvironment. */
+  var c=document.createElement('canvas'); c.width=1024; c.height=512;
+  var x=c.getContext('2d');
+
+  /* Base sky gradient — cool navy to soft warm horizon */
+  var g=x.createLinearGradient(0,0,0,512);
+  g.addColorStop(0.00,'#3a475f');
+  g.addColorStop(0.28,'#232d42');
+  g.addColorStop(0.55,'#141b2c');
+  g.addColorStop(1.00,'#0a0e18');
+  x.fillStyle=g; x.fillRect(0,0,1024,512);
+
+  /* Softbox panel 1 — large, warm-white, upper-left (key light source) */
+  var p1=x.createRadialGradient(300,110,10,300,110,220);
+  p1.addColorStop(0,'rgba(255,250,240,0.95)');
+  p1.addColorStop(0.4,'rgba(255,245,230,0.5)');
+  p1.addColorStop(1,'rgba(255,245,230,0)');
+  x.fillStyle=p1; x.fillRect(0,0,1024,512);
+
+  /* Softbox panel 2 — smaller, cool-white, upper-right (fill light source) */
+  var p2=x.createRadialGradient(760,150,5,760,150,170);
+  p2.addColorStop(0,'rgba(210,225,255,0.7)');
+  p2.addColorStop(0.5,'rgba(210,225,255,0.28)');
+  p2.addColorStop(1,'rgba(210,225,255,0)');
+  x.fillStyle=p2; x.fillRect(0,0,1024,512);
+
+  /* Rim strip — bright thin band low-right, mimics a rim/back light */
+  var p3=x.createRadialGradient(880,340,4,880,340,140);
+  p3.addColorStop(0,'rgba(180,210,255,0.55)');
+  p3.addColorStop(1,'rgba(180,210,255,0)');
+  x.fillStyle=p3; x.fillRect(0,0,1024,512);
+
+  /* Ground bounce — soft warm glow at the bottom (mimics floor reflection) */
+  var p4=x.createLinearGradient(0,420,0,512);
+  p4.addColorStop(0,'rgba(40,30,20,0)');
+  p4.addColorStop(1,'rgba(70,50,35,0.4)');
+  x.fillStyle=p4; x.fillRect(0,420,1024,92);
+
+  var tex=new THREE.CanvasTexture(c);
+  tex.mapping=THREE.EquirectangularReflectionMapping;
+  tex.encoding=THREE.sRGBEncoding;
+  return tex;
+}
+
 function initThree(){
   var cv=$('cv'), vp=$('vp');
   rnd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
   rnd.setPixelRatio(Math.min(devicePixelRatio,2));
   rnd.outputEncoding=THREE.sRGBEncoding;
   rnd.toneMapping=THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure=1.05;
+  rnd.toneMappingExposure=1.15;
   rnd.shadowMap.enabled=true;
   rnd.shadowMap.type=THREE.PCFSoftShadowMap;
   rnd.shadowMap.autoUpdate=true;
 
   scn=new THREE.Scene();
   scn.background=new THREE.Color(0x07090f);
-  scn.fog=new THREE.FogExp2(0x07090f,.022);
+  scn.fog=new THREE.FogExp2(0x07090f,.018);
 
   cam=new THREE.PerspectiveCamera(40,1,.01,2000);
   cam.position.set(0,2,12);
@@ -649,40 +697,76 @@ function initThree(){
   rc=new THREE.Raycaster();
   ms=new THREE.Vector2(-9,-9);
 
-  /* Environment — PMREM RoomEnvironment for realistic enamel reflections */
+  /* Environment — custom studio softbox HDRI for crisp, realistic enamel
+     highlights (sharper specular response than the generic RoomEnvironment) */
   pmremGen=new THREE.PMREMGenerator(rnd);
   pmremGen.compileEquirectangularShader();
   try{
-    var roomEnv=new THREE.RoomEnvironment();
-    var envTex=pmremGen.fromScene(roomEnv,0.04).texture;
-    scn.environment=envTex;
-    roomEnv.dispose();
+    var studioTex=makeStudioEnvTexture();
+    var envRT=pmremGen.fromEquirectangular(studioTex);
+    scn.environment=envRT.texture;
+    studioTex.dispose();
   }catch(e){
-    scn.add(new THREE.HemisphereLight(0xffffff,0x223344,0.9));
+    try{
+      var roomEnv=new THREE.RoomEnvironment();
+      scn.environment=pmremGen.fromScene(roomEnv,0.04).texture;
+      roomEnv.dispose();
+    }catch(e2){
+      scn.add(new THREE.HemisphereLight(0xffffff,0x223344,0.9));
+    }
   }
 
-  /* Lights */
-  var key=new THREE.DirectionalLight(0xfff8f0,1.6);
-  key.position.set(5,10,7);
+  /* Lights — 4-point studio rig */
+  var key=new THREE.DirectionalLight(0xfff6ec,2.0);
+  key.position.set(5,11,7);
   key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048);
+  key.shadow.mapSize.set(4096,4096);
   key.shadow.camera.near=0.5; key.shadow.camera.far=60;
   key.shadow.camera.left=-10; key.shadow.camera.right=10;
   key.shadow.camera.top=8; key.shadow.camera.bottom=-8;
-  key.shadow.bias=-0.0004;
-  key.shadow.radius=3;
+  key.shadow.bias=-0.00025;
+  key.shadow.normalBias=0.01;
+  key.shadow.radius=5;
   scn.add(key);
-  var fill=new THREE.DirectionalLight(0xb8d0ff,0.55);fill.position.set(-7,3,-5);scn.add(fill);
-  var rim=new THREE.DirectionalLight(0xffffff,0.4);rim.position.set(0,-3,-10);scn.add(rim);
+
+  var fill=new THREE.DirectionalLight(0xc5dcff,0.65);
+  fill.position.set(-8,4,-4); scn.add(fill);
+
+  var rim=new THREE.DirectionalLight(0xffffff,0.55);
+  rim.position.set(1,-2,-11); scn.add(rim);
+
+  var bounce=new THREE.DirectionalLight(0xffe8c8,0.22);
+  bounce.position.set(0,-6,3); scn.add(bounce);
+
+  var acc=new THREE.PointLight(0x8fb8ff,0.35,30,2);
+  acc.position.set(0,9,-2); scn.add(acc);
 
   /* Floor */
   var fl=new THREE.Mesh(
     new THREE.PlaneGeometry(80,80),
-    new THREE.MeshStandardMaterial({color:0x060810,roughness:0.88,metalness:0.15})
+    new THREE.MeshStandardMaterial({color:0x060810,roughness:0.85,metalness:0.2})
   );
   fl.rotation.x=-Math.PI/2; fl.position.y=-8; fl.receiveShadow=true;
   scn.add(fl);
   var grid=new THREE.GridHelper(60,60,0x0f1728,0x0f1728);grid.position.y=-7.96;scn.add(grid);
+
+  /* Contact shadow — soft radial gradient disc under the arch for grounding,
+     visible even when the camera never sees the distant floor plane */
+  var csCanvas=document.createElement('canvas'); csCanvas.width=csCanvas.height=256;
+  var csx=csCanvas.getContext('2d');
+  var csg=csx.createRadialGradient(128,128,0,128,128,128);
+  csg.addColorStop(0,'rgba(0,0,0,0.55)');
+  csg.addColorStop(0.6,'rgba(0,0,0,0.22)');
+  csg.addColorStop(1,'rgba(0,0,0,0)');
+  csx.fillStyle=csg; csx.fillRect(0,0,256,256);
+  var csTex=new THREE.CanvasTexture(csCanvas);
+  CONTACT_SHADOW=new THREE.Mesh(
+    new THREE.PlaneGeometry(1,1),
+    new THREE.MeshBasicMaterial({map:csTex,transparent:true,depthWrite:false,opacity:0})
+  );
+  CONTACT_SHADOW.rotation.x=-Math.PI/2;
+  CONTACT_SHADOW.renderOrder=-1;
+  scn.add(CONTACT_SHADOW);
 
   /* Selection ring — ONE ring, repositioned when selection changes */
   var ringGeo=new THREE.TorusGeometry(1,0.035,16,60);
@@ -753,9 +837,20 @@ function loadGLB(arrayBuffer, fileName){
       else node.traverse(function(c){if(c.isMesh&&!meshNode) meshNode=c;});
       if(!meshNode) return;
 
-      /* Clone material so we can recolour independently */
+      /* Replace with MeshPhysicalMaterial for a realistic enamel clearcoat
+         sheen — carries over the original base colour and texture maps */
       var origMat=Array.isArray(meshNode.material)?meshNode.material[0]:meshNode.material;
-      var mat=origMat.clone();
+      var mat=new THREE.MeshPhysicalMaterial({
+        color: origMat.color ? origMat.color.clone() : new THREE.Color(0xf0ece0),
+        map: origMat.map || null,
+        normalMap: origMat.normalMap || null,
+        roughness: 0.32,
+        metalness: 0.0,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.18,
+        envMapIntensity: 1.35,
+        reflectivity: 0.5
+      });
       meshNode.material=mat;
 
       /* Compute world bounding box AFTER model is in scene */
@@ -783,6 +878,14 @@ function loadGLB(arrayBuffer, fileName){
 
     var mapped=Object.keys(TEETH).length;
     modelLoaded=true;
+
+    /* Ground the model with a soft contact shadow disc */
+    if(CONTACT_SHADOW){
+      var span=Math.max(sz.x,sz.z)*1.6;
+      CONTACT_SHADOW.scale.set(span,span,1);
+      CONTACT_SHADOW.position.set(modelCtr.x, modelBox.min.y-modelRad*0.08, modelCtr.z);
+      CONTACT_SHADOW.material.opacity=0.5;
+    }
 
     /* Apply treatment colours (demo seed) */
     applyAll();
@@ -824,20 +927,28 @@ function applyOne(f){
   var s=S.teeth[f]||{}, c=getCol(f);
   var mat=t.mat;
 
-  /* Base colour */
+  /* Base colour — clearcoat stays constant (that's the "wet enamel" sheen);
+     only the base roughness/colour shifts per condition */
   if(s.cond==='sound'&&(!s.tx||s.tx==='none')){
-    /* Keep original model colour — just adjust roughness/metalness */
     mat.color.copy(t.origC);
-    mat.roughness=0.38; mat.metalness=0.0;
+    mat.roughness=0.32; mat.metalness=0.0;
+    mat.clearcoat=0.55; mat.clearcoatRoughness=0.18;
   } else {
     mat.color.setRGB(c.c[0],c.c[1],c.c[2]);
     mat.roughness=c.r; mat.metalness=c.m;
+    /* Crowns/restorations get a glossier clearcoat (porcelain/ceramic look);
+       caries and missing get none (organic matte decay look) */
+    if(s.cond==='crown'||s.cond==='restored'||(s.tx&&s.tx!=='none')){
+      mat.clearcoat=0.7; mat.clearcoatRoughness=0.08;
+    } else {
+      mat.clearcoat=0.15; mat.clearcoatRoughness=0.4;
+    }
   }
 
   /* X-ray */
   mat.transparent=S.xray;
   mat.opacity=S.xray?0.32:1.0;
-  if(S.xray){ mat.color.setRGB(0.35,0.72,1.0); mat.roughness=0.1; mat.metalness=0.0; }
+  if(S.xray){ mat.color.setRGB(0.35,0.72,1.0); mat.roughness=0.1; mat.metalness=0.0; mat.clearcoat=0.3; }
 
   /* Wireframe */
   mat.wireframe=S.wire;
@@ -872,10 +983,11 @@ function buildGum(){
   if(GUM){scn.remove(GUM);GUM.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});GUM=null;}
   if(!S.gum||!modelLoaded) return;
 
-  var gumMat=new THREE.MeshStandardMaterial({
-    color:new THREE.Color(0.84,0.40,0.48),
-    roughness:0.72, metalness:0.0,
-    envMapIntensity:0.3
+  var gumMat=new THREE.MeshPhysicalMaterial({
+    color:new THREE.Color(0.82,0.38,0.46),
+    roughness:0.62, metalness:0.0,
+    clearcoat:0.35, clearcoatRoughness:0.35,
+    envMapIntensity:0.5
   });
 
   /* Build gum spine from tooth centroids at the CERVICAL level.
