@@ -1059,6 +1059,7 @@ window.clearSel=function(){
   if(SEL_RING) SEL_RING.visible=false;
   hide('hud'); hide('te-editor'); show('te-empty');
   text('sb-sel','No selection');
+  try{ parent.postMessage({type:'dv:clearSel'},'*'); }catch(ex){}
 };
 
 /* ── zoom to tooth ── */
@@ -1124,8 +1125,12 @@ window.saveTooth=function(){
     btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Changes';
   },1600);
 
-  /* postMessage to Bubble parent if embedded in iframe */
-  try{ parent.postMessage({type:'dv:tooth',fdi:S.sel,cond:t.cond,tx:t.tx,note:t.note},'*'); }catch(e){}
+  /* postMessage to Bubble parent */
+  try{ parent.postMessage({
+    type:'dv:tooth', fdi:S.sel,
+    name: NAMES[S.sel]||'', cond:t.cond, tx:t.tx, note:t.note,
+    mob: t.mob||'0', arch: archOf(S.sel), quad: quadOf(S.sel)
+  },'*'); emitStats(); }catch(e){}
 };
 
 /* ── segmented control ── */
@@ -1306,13 +1311,39 @@ window.skipToDemo=function(){
 /* ── postMessage bridge (Bubble iframe integration) ── */
 window.addEventListener('message',function(e){
   var d=e.data; if(!d||!d.type) return;
+
   if(d.type==='dv:setState'&&d.teeth){
     S.teeth=d.teeth; applyAll(); updStats(); updCount();
+    emitStats();
+  }
+  if(d.type==='dv:setTooth'&&d.fdi){
+    if(!S.teeth[d.fdi])S.teeth[d.fdi]={};
+    var t=S.teeth[d.fdi];
+    if(d.cond)t.cond=d.cond; if(d.tx)t.tx=d.tx;
+    if(d.note!=null)t.note=d.note; if(d.mob)t.mob=d.mob;
+    applyOne(d.fdi); updStats(); updCount(); emitStats();
   }
   if(d.type==='dv:selectTooth'&&d.fdi&&TEETH[d.fdi]) selTooth(d.fdi);
   if(d.type==='dv:clearSel') clearSel();
   if(d.type==='dv:setBA'&&d.value!=null){ S.ba=d.value; $('ba-range').value=d.value; onBA(d.value); }
+  if(d.type==='dv:camGo'&&d.view) camGo(d.view);
+  if(d.type==='dv:setPanel'){
+    var panel=$('panel'); if(panel) panel.style.display=d.visible===false?'none':'';
+  }
+  if(d.type==='dv:resetAll') resetAll();
 });
+
+/* Emit helpers — send state back to Bubble parent */
+function emitStats(){
+  var vs=Object.values(S.teeth);
+  try{ parent.postMessage({
+    type:'dv:stats',
+    sound: Math.max(0,32-vs.filter(function(t){return t.cond==='caries';}).length-vs.filter(function(t){return t.cond==='missing';}).length),
+    caries:  vs.filter(function(t){return t.cond==='caries';}).length,
+    missing: vs.filter(function(t){return t.cond==='missing';}).length,
+    planned: vs.filter(function(t){return t.tx&&t.tx!=='none';}).length
+  },'*'); }catch(e){}
+}
 
 /* ── demo seed ── */
 function seed(){
@@ -1368,6 +1399,8 @@ function boot(){
   updStats(); updCount();
   buildStageList();
   autoLoadModel();
+  // Notify Bubble parent iframe that viewer is ready
+  setTimeout(function(){ try{ parent.postMessage({type:'dv:ready'},'*'); }catch(e){} }, 800);
 }
 
 if(document.readyState==='complete') boot();
