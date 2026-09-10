@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DentaViz — Dental Treatment Visualization</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#07090f;--sf:#0f1420;--sf2:#161e2e;--sf3:#1c2538;--sf4:#232f47;
+  --ac:#4f8ff7;--ac2:#0d1a30;--acs:#7db3ff;--acg:#3b82f6;
+  --dg:#f43f5e;--wn:#f59e0b;--ok:#10d9a0;--pu:#a78bfa;--cy:#06b6d4;
+  --bd:#1a2540;--bd2:#243358;--bd3:#2e4070;
+  --t1:#eef2ff;--t2:#9aaac8;--t3:#5f6e8a;--t4:#3d4e68;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  --r:12px;--r2:8px;--r3:6px
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:13px}
+#app{display:grid;grid-template-rows:50px 1fr 28px;height:100vh}
+
+/* ── HEADER ── */
+#hdr{display:flex;align-items:center;padding:0 16px;gap:0;background:rgba(15,20,32,.96);border-bottom:1px solid var(--bd);backdrop-filter:blur(16px);z-index:20;position:relative}
+#hdr::after{content:'';position:absolute;inset-x:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,143,247,.4),transparent)}
+.logo{display:flex;align-items:center;gap:8px;margin-right:20px;flex-shrink:0}
+.logo-gem{width:28px;height:28px}
+.logo-gem svg{width:100%;height:100%;filter:drop-shadow(0 0 8px rgba(79,143,247,.5))}
+.logo-text{font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--t1)}
+.logo-text span{color:var(--acs)}
+.logo-sub{font-size:8px;font-weight:600;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;line-height:1}
+.hsp{flex:1}
+.nav{display:flex;gap:1px;height:100%}
+.ntab{padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;user-select:none}
+.ntab:hover{color:var(--t2)}
+.ntab.on{color:var(--acs);border-bottom-color:var(--ac)}
+.ntab svg{width:13px;height:13px;flex-shrink:0}
+.hbtn{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:6px 12px;border-radius:var(--r2);border:1px solid var(--bd2);background:var(--sf2);color:var(--t2);cursor:pointer;transition:.15s;font-family:var(--sans);margin-left:7px;white-space:nowrap}
+.hbtn:hover{color:var(--t1);background:var(--sf3);border-color:var(--bd3)}
+.hbtn svg{width:12px;height:12px}
+.hbtn.blue{background:linear-gradient(135deg,var(--ac),var(--acg));border-color:transparent;color:#fff;box-shadow:0 2px 14px rgba(79,143,247,.3)}
+.hbtn.blue:hover{filter:brightness(1.1)}
+.changepill{font-size:11px;font-weight:700;font-family:var(--mono);padding:5px 10px;border-radius:var(--r2);background:var(--ac2);color:var(--acs);border:1px solid rgba(79,143,247,.2);margin-left:7px}
+
+/* ── BODY ── */
+#body{display:grid;grid-template-columns:1fr 288px;overflow:hidden}
+
+/* ── VIEWPORT ── */
+#vp{position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#111d38 0%,#07090f 68%)}
+#cv{display:block;width:100%;height:100%}
+.vp-fade-t{position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(180deg,rgba(7,9,15,.45),transparent);pointer-events:none;z-index:2}
+.vp-fade-b{position:absolute;inset:auto 0 0;height:60px;background:linear-gradient(0deg,rgba(7,9,15,.45),transparent);pointer-events:none;z-index:2}
+
+/* Glass surface */
+.glass{backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);background:rgba(10,14,26,.78);border:1px solid rgba(255,255,255,.06);box-shadow:0 8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)}
+
+/* Loading overlay */
+#ld-overlay{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.ld-box{background:var(--sf);border:1px solid var(--bd2);border-radius:18px;padding:36px 40px;max-width:460px;width:100%}
+.ld-spinner{width:52px;height:52px;margin:0 auto 20px;position:relative}
+.ld-spinner svg{animation:spin 2.4s linear infinite;width:100%;height:100%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-h{font-size:18px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#fff,#8fa8d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ld-p{font-size:12px;color:var(--t3);line-height:1.7;margin-bottom:24px}
+.ld-dropzone{border:1.5px dashed var(--bd3);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.ld-dropzone:hover,.ld-dropzone.drag{border-color:var(--ac);background:rgba(79,143,247,.04)}
+.ld-dz-ic{width:42px;height:42px;margin:0 auto 12px;border-radius:10px;background:var(--ac2);display:grid;place-items:center;transition:.15s}
+.ld-dropzone:hover .ld-dz-ic{background:var(--ac)}
+.ld-dz-ic svg{width:20px;height:20px;color:var(--acs)}
+.ld-dropzone:hover .ld-dz-ic svg{color:#fff}
+.ld-dz-t{font-size:13px;font-weight:600;margin-bottom:4px}
+.ld-dz-s{font-size:11px;color:var(--t4)}
+#ld-file{display:none}
+.ld-divider{display:flex;align-items:center;gap:10px;color:var(--t4);font-size:11px;margin:16px 0}
+.ld-divider::before,.ld-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.ld-demo-btn{width:100%;padding:11px;border-radius:10px;border:1px solid var(--bd2);background:var(--sf2);color:var(--t2);font-size:12.5px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.ld-demo-btn:hover{border-color:var(--ac);color:var(--acs);background:var(--ac2)}
+.ld-demo-btn svg{width:14px;height:14px}
+.ld-progress{margin-top:18px;display:none}
+.ld-track{height:3px;background:var(--sf3);border-radius:2px;overflow:hidden}
+.ld-bar{height:100%;background:linear-gradient(90deg,var(--ac),var(--acs));width:0;transition:width .3s;border-radius:2px;box-shadow:0 0 8px var(--ac)}
+.ld-msg{font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:8px}
+.ld-hint{font-size:11px;color:var(--t4);line-height:1.6;margin-top:16px;padding:10px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px}
+.ld-hint b{color:var(--t2)}
+
+/* Floating HUD – selected tooth */
+#hud{position:absolute;top:14px;left:14px;border-radius:var(--r);overflow:hidden;min-width:220px;display:none;z-index:5}
+.hud-top{padding:12px 14px 10px;background:linear-gradient(135deg,rgba(79,143,247,.1),transparent)}
+.hud-lbl{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.hud-lbl::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac);flex-shrink:0}
+.hud-main{display:flex;align-items:baseline;gap:10px}
+.hud-fdi{font-size:36px;font-weight:200;font-family:var(--mono);line-height:.9;letter-spacing:-.04em;background:linear-gradient(135deg,#fff,#7a90b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hud-name{font-size:13px;font-weight:600;color:var(--t1)}
+.hud-arch{font-size:10px;color:var(--t3);margin-top:2px}
+.hud-body{padding:10px 14px;border-top:1px solid var(--bd)}
+.hud-row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;margin-bottom:5px}
+.hud-row:last-child{margin-bottom:0}
+.hud-k{color:var(--t4);font-weight:500}
+.hud-v{font-weight:600;display:flex;align-items:center;gap:5px}
+.hud-dot{width:7px;height:7px;border-radius:50%}
+
+/* Model info badge */
+#badge{position:absolute;top:14px;left:50%;transform:translateX(-50%);padding:7px 15px;border-radius:100px;display:none;align-items:center;gap:7px;font-size:11px;font-weight:600;font-family:var(--mono);color:var(--ok);white-space:nowrap;z-index:5}
+#badge .bd{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+
+/* View tools – right side of viewport */
+#vtools{position:absolute;top:14px;right:14px;border-radius:var(--r);padding:5px;display:flex;flex-direction:column;gap:2px;z-index:5}
+.vt{display:flex;align-items:center;gap:8px;padding:7px 11px;font-size:11px;font-weight:500;color:var(--t3);cursor:pointer;border-radius:var(--r2);transition:.13s;user-select:none;min-width:120px}
+.vt:hover{color:var(--t1);background:rgba(255,255,255,.05)}
+.vt.on{color:var(--acs);background:rgba(79,143,247,.1)}
+.vt-ic{width:14px;height:14px;flex-shrink:0;opacity:.75}
+.vt.on .vt-ic{opacity:1}
+.vt-ic svg{width:100%;height:100%}
+.vtoggle{margin-left:auto;width:24px;height:14px;border-radius:100px;background:var(--sf3);position:relative;flex-shrink:0;transition:.15s}
+.vt.on .vtoggle{background:var(--ac)}
+.vtoggle::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.vt.on .vtoggle::after{transform:translateX(10px)}
+
+/* Camera dock */
+#camdock{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:4px;border-radius:10px;display:flex;gap:2px;z-index:5}
+.cb{padding:7px 12px;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--t3);cursor:pointer;border-radius:var(--r2);transition:.13s;user-select:none;display:flex;align-items:center;gap:4px;letter-spacing:.04em}
+.cb:hover{color:var(--t1);background:rgba(255,255,255,.07)}
+.cb.on{color:var(--acs);background:rgba(79,143,247,.12)}
+.cb svg{width:12px;height:12px}
+.cb-div{width:1px;background:var(--bd);margin:4px 2px}
+
+/* BA slider */
+#ba-wrap{position:absolute;bottom:14px;right:14px;padding:10px 16px;border-radius:10px;display:flex;align-items:center;gap:12px;z-index:5}
+.ba-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;transition:.2s}
+.ba-label.cur{color:var(--t2)}.ba-label.aft{color:var(--t4)}
+#ba-range{width:130px;accent-color:var(--ac);cursor:pointer;height:4px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,var(--ac) 0%,var(--sf3) 0%);border-radius:3px}
+#ba-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 0 3px var(--ac)}
+.ba-pct{font-size:11px;font-family:var(--mono);color:var(--acs);min-width:30px;text-align:right;font-weight:600}
+
+/* Hover tooltip */
+#tip{position:absolute;pointer-events:none;display:none;z-index:40;overflow:hidden;min-width:175px;border-radius:10px}
+.tip-top{padding:9px 12px 7px;background:linear-gradient(135deg,rgba(79,143,247,.12),transparent)}
+.tip-fdi{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--t1)}
+.tip-nm{font-size:11px;color:var(--t2);margin-top:1px}
+.tip-body{padding:7px 12px;border-top:1px solid var(--bd);font-size:10.5px;display:flex;flex-direction:column;gap:3px}
+.tip-row{display:flex;justify-content:space-between;gap:12px}
+.tip-k{color:var(--t4)}.tip-v{font-weight:600;display:flex;align-items:center;gap:4px}
+.tip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* Readout */
+#readout{position:absolute;bottom:14px;left:14px;padding:8px 12px;border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--t4);display:flex;flex-direction:column;gap:3px;pointer-events:none;z-index:5}
+.rr{display:flex;gap:8px}
+.rk{min-width:32px;color:var(--t4)}.rv{color:var(--t2)}
+
+/* ── PANEL ── */
+#panel{background:var(--sf);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;position:relative}
+#panel::before{content:'';position:absolute;top:0;left:-1px;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(79,143,247,.25),transparent)}
+#ptabs{display:flex;padding:6px 6px 0;gap:2px;flex-shrink:0;border-bottom:1px solid var(--bd)}
+.ptab{flex:1;padding:7px 4px 8px;font-size:11.5px;font-weight:500;text-align:center;cursor:pointer;color:var(--t4);border-bottom:2px solid transparent;border-radius:var(--r2) var(--r2) 0 0;transition:.13s;user-select:none;margin-bottom:-1px}
+.ptab:hover{color:var(--t2);background:var(--sf2)}
+.ptab.on{color:var(--acs);border-bottom-color:var(--ac);background:var(--sf2)}
+#pbody{flex:1;overflow-y:auto;overflow-x:hidden}
+.pane{padding:14px}
+
+/* Overview */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px}
+.stat-card{padding:12px 13px;border-radius:10px;background:var(--sf2);border:1px solid var(--bd);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:-18px;right:-18px;width:44px;height:44px;border-radius:50%;filter:blur(20px);opacity:.35}
+.sc-ok::after{background:var(--ok)}.sc-dg::after{background:var(--dg)}.sc-ac::after{background:var(--ac)}.sc-t3::after{background:var(--t3)}
+.stat-n{font-size:26px;font-weight:200;font-family:var(--mono);line-height:1;position:relative}
+.stat-l{font-size:9.5px;font-weight:600;color:var(--t4);margin-top:5px;text-transform:uppercase;letter-spacing:.06em;position:relative}
+.sec-title{font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.stage-list{display:flex;flex-direction:column}
+.stage{display:flex;gap:11px;position:relative;padding-bottom:14px}
+.stage:last-child{padding-bottom:0}
+.stage-line{position:absolute;left:11px;top:24px;bottom:0;width:1.5px;background:var(--bd)}
+.stage:last-child .stage-line{display:none}
+.stage-dot{width:23px;height:23px;border-radius:50%;background:var(--sf3);border:1.5px solid var(--bd2);display:grid;place-items:center;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--t3);flex-shrink:0;z-index:1;transition:.13s}
+.stage.act .stage-dot{background:var(--ac2);border-color:var(--ac);color:var(--acs);box-shadow:0 0 0 3px rgba(79,143,247,.15)}
+.stage-body{flex:1;padding-top:1px}
+.stage-t{font-size:12px;font-weight:600;color:var(--t1)}
+.stage-d{font-size:10.5px;color:var(--t3);margin-top:2px;line-height:1.5}
+.stage-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.ftag{font-size:9.5px;font-weight:600;font-family:var(--mono);padding:2px 6px;background:var(--ac2);border-radius:4px;color:var(--acs);border:1px solid rgba(79,143,247,.18)}
+
+/* Tooth editor */
+.te-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--bd);position:relative}
+.te-fdi{font-size:44px;font-weight:200;font-family:var(--mono);line-height:.85;letter-spacing:-.05em;background:linear-gradient(135deg,#fff,#6a80a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex-shrink:0}
+.te-info{flex:1;padding-top:4px}
+.te-nm{font-size:13px;font-weight:600;color:var(--t1);line-height:1.3}
+.te-sub{font-size:10.5px;color:var(--t3);margin-top:2px}
+.te-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;margin-top:7px;letter-spacing:.02em}
+.te-close{position:absolute;top:0;right:0;width:24px;height:24px;border-radius:6px;border:1px solid var(--bd);background:var(--sf2);color:var(--t4);cursor:pointer;display:grid;place-items:center;transition:.12s}
+.te-close:hover{color:var(--t1);background:var(--sf3);border-color:var(--bd2)}
+.te-close svg{width:12px;height:12px}
+
+/* Surface diagram */
+.surf-wrap{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:2px}
+.szn{cursor:pointer;transition:.12s}.szn:hover{filter:brightness(1.3)}
+.surf-leg{display:flex;justify-content:center;gap:14px;margin-top:8px}
+.sl-it{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3)}
+.sl-sq{width:9px;height:9px;border-radius:3px}
+
+.fl{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;margin:14px 0 6px;display:flex;align-items:center;gap:5px}
+.fl:first-child{margin-top:0}
+.fl-sq{width:6px;height:6px;border-radius:2px;flex-shrink:0}
+.fd{width:100%;font-size:12.5px;font-family:var(--sans);padding:8px 10px;border-radius:8px;border:1px solid var(--bd2);background:var(--sf2);color:var(--t1);transition:.13s;appearance:none}
+select.fd{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f6e8a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:30px;cursor:pointer}
+.fd:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac2)}
+.fd:hover{border-color:var(--bd3)}
+textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
+
+/* Segmented */
+.seg{display:flex;background:var(--sf2);border:1px solid var(--bd2);border-radius:8px;padding:3px;gap:2px}
+.seg-o{flex:1;padding:6px 4px;font-size:11px;font-weight:500;text-align:center;color:var(--t3);cursor:pointer;border-radius:5px;transition:.12s;user-select:none}
+.seg-o:hover{color:var(--t2)}.seg-o.on{background:var(--ac2);color:var(--acs)}
+
+.btn-save{width:100%;margin-top:16px;padding:10px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--ac),var(--acg));color:#fff;font-size:12px;font-weight:700;font-family:var(--sans);cursor:pointer;transition:.15s;box-shadow:0 2px 14px rgba(79,143,247,.28);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-save:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-save svg{width:13px;height:13px}
+.btn-save.ok{background:linear-gradient(135deg,var(--ok),#0ea882)}
+
+.empty{text-align:center;padding:48px 20px}
+.empty-icon{width:48px;height:48px;margin:0 auto 14px;border-radius:12px;background:var(--sf2);border:1px solid var(--bd);display:grid;place-items:center}
+.empty-icon svg{width:22px;height:22px;color:var(--t4)}
+.empty-t{font-size:13px;font-weight:600;color:var(--t2);margin-bottom:4px}
+.empty-s{font-size:11.5px;color:var(--t4);line-height:1.7}
+
+/* Legend */
+.leg-group{margin-bottom:16px}
+.leg-item{display:flex;align-items:center;gap:9px;padding:5px 0}
+.leg-sw{width:16px;height:16px;border-radius:5px;flex-shrink:0;box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.leg-text{font-size:12px;color:var(--t2)}
+.leg-text small{display:block;font-size:10px;color:var(--t4);margin-top:1px}
+.kbd-list{display:flex;flex-direction:column;gap:7px}
+.kbd-item{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--t3)}
+.kbd{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;background:var(--sf3);border:1px solid var(--bd2);border-radius:5px;color:var(--t2)}
+
+/* Status bar */
+#sbar{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--sf);border-top:1px solid var(--bd);font-size:10px;color:var(--t4);font-family:var(--mono)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px var(--ok);flex-shrink:0}
+@keyframes sblink{0%,100%{opacity:1}50%{opacity:.25}}.sdot{animation:sblink 2.5s ease-in-out infinite}
+.ssep{width:1px;height:10px;background:var(--bd)}
+#sbar-r{margin-left:auto;display:flex;gap:10px;align-items:center}
+.sfps{color:var(--ok)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--bd3)}
+
+/* Divider */
+.divl{height:1px;background:var(--bd);margin:12px 0}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="logo">
+    <div class="logo-gem">
+      <svg viewBox="0 0 28 28" fill="none"><path d="M14 2.5L23.5 7.5V20.5L14 25.5L4.5 20.5V7.5L14 2.5Z" fill="#0d1a30" stroke="#4f8ff7" stroke-width="1.3"/><path d="M14 8L19.2 11V17L14 20L8.8 17V11L14 8Z" fill="#4f8ff7" opacity=".75"/><circle cx="14" cy="14" r="2.5" fill="#7db3ff"/></svg>
+    </div>
+    <div><div class="logo-text">Denta<span>Viz</span></div><div class="logo-sub">Clinical 3D</div></div>
+  </div>
+  <div class="nav">
+    <div class="ntab on" onclick="setNav(this,'plan')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Treatment Plan</div>
+    <div class="ntab" onclick="setNav(this,'stages')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Visit Stages</div>
+    <div class="ntab" onclick="setNav(this,'ba')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v18"/><circle cx="12" cy="12" r="9"/></svg>Before / After</div>
+    <div class="ntab" onclick="setNav(this,'patient')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Patient View</div>
+  </div>
+  <div class="hsp"></div>
+  <button class="hbtn blue" onclick="openLoader()">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Load Model
+  </button>
+  <button class="hbtn" onclick="resetAll()" title="Reset all changes">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+  </button>
+  <div class="changepill" id="changepill">0 changes</div>
+</div>
+
+<!-- BODY -->
+<div id="body">
+
+<!-- 3D VIEWPORT -->
+<div id="vp">
+  <canvas id="cv"></canvas>
+  <div class="vp-fade-t"></div>
+  <div class="vp-fade-b"></div>
+
+  <!-- Loading overlay -->
+  <div id="ld-overlay">
+    <div class="ld-box">
+      <div class="ld-spinner">
+        <svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="22" stroke="#1a2540" stroke-width="2.5"/><path d="M26 4a22 22 0 0122 22" stroke="#4f8ff7" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ld-h">Load your dental model</div>
+      <div class="ld-p">Drop a GLB file with teeth named by FDI notation (11–48). Rendered with the industry-standard glTF loader — same engine as professional dental viewers.</div>
+      <div class="ld-dropzone" id="ld-dz" onclick="document.getElementById('ld-file').click()">
+        <div class="ld-dz-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div class="ld-dz-t">Drop teeth_library.glb here</div>
+        <div class="ld-dz-s">or click to browse · GLB format</div>
+      </div>
+      <input type="file" id="ld-file" accept=".glb,.gltf" onchange="handleFile(this.files[0])">
+      <div class="ld-divider">or</div>
+      <button class="ld-demo-btn" onclick="skipToDemo()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Continue without model (placeholder geometry)
+      </button>
+      <div class="ld-progress" id="ld-prog">
+        <div class="ld-track"><div class="ld-bar" id="ld-bar"></div></div>
+        <div class="ld-msg" id="ld-msg">Reading file…</div>
+      </div>
+      <div class="ld-hint"><b>From Blender:</b> Name each tooth object 11–48 (FDI), select all, File → Export → glTF Binary (.glb).</div>
+    </div>
+  </div>
+
+  <!-- Selected tooth HUD -->
+  <div class="glass" id="hud">
+    <div class="hud-top">
+      <div class="hud-lbl">Selected Tooth</div>
+      <div class="hud-main">
+        <div class="hud-fdi" id="hud-fdi">—</div>
+        <div><div class="hud-name" id="hud-name">—</div><div class="hud-arch" id="hud-arch">—</div></div>
+      </div>
+    </div>
+    <div class="hud-body">
+      <div class="hud-row"><span class="hud-k">Condition</span><span class="hud-v" id="hud-cond"><span class="hud-dot"></span>—</span></div>
+      <div class="hud-row"><span class="hud-k">Treatment</span><span class="hud-v" id="hud-tx" style="color:var(--acs)">—</span></div>
+    </div>
+  </div>
+
+  <!-- Model badge -->
+  <div class="glass" id="badge"><span class="bd"></span><span id="badge-txt"></span></div>
+
+  <!-- View tools -->
+  <div class="glass" id="vtools">
+    <div class="vt on" onclick="tgl('gum',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12c0-3 2-5 5-5s4 2 4 5 2 5 4 5 5-2 5-5"/></svg></span>Gum<span class="vtoggle"></span></div>
+    <div class="vt" onclick="tgl('xray',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span>X-ray<span class="vtoggle"></span></div>
+    <div class="vt" onclick="tgl('explode',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M2 12h6M16 12h6"/></svg></span>Explode<span class="vtoggle"></span></div>
+    <div class="vt" onclick="tgl('wire',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span>Wireframe<span class="vtoggle"></span></div>
+  </div>
+
+  <!-- BA slider -->
+  <div class="glass" id="ba-wrap">
+    <span class="ba-label cur" id="ba-cur">Current</span>
+    <input type="range" id="ba-range" min="0" max="100" value="0" oninput="onBA(+this.value)">
+    <span class="ba-label aft" id="ba-aft">Proposed</span>
+    <span class="ba-pct" id="ba-pct">0%</span>
+  </div>
+
+  <!-- Camera dock -->
+  <div class="glass" id="camdock">
+    <div class="cb" onclick="camGo('front',this)">FRONT</div>
+    <div class="cb" onclick="camGo('top',this)">TOP</div>
+    <div class="cb" onclick="camGo('btm',this)">BTM</div>
+    <div class="cb-div"></div>
+    <div class="cb" onclick="camGo('left',this)">LEFT</div>
+    <div class="cb" onclick="camGo('right',this)">RIGHT</div>
+    <div class="cb-div"></div>
+    <div class="cb on" onclick="camGo('iso',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>3D
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="glass" id="tip">
+    <div class="tip-top"><div class="tip-fdi" id="tip-fdi"></div><div class="tip-nm" id="tip-nm"></div></div>
+    <div class="tip-body">
+      <div class="tip-row"><span class="tip-k">Condition</span><span class="tip-v" id="tip-cond"></span></div>
+      <div class="tip-row" id="tip-tx-row"><span class="tip-k">Treatment</span><span class="tip-v" id="tip-tx" style="color:var(--acs)"></span></div>
+    </div>
+  </div>
+
+  <!-- Readout -->
+  <div class="glass" id="readout">
+    <div class="rr"><span class="rk">MDL</span><span class="rv" id="ro-model">—</span></div>
+    <div class="rr"><span class="rk">TEE</span><span class="rv" id="ro-teeth">—</span></div>
+    <div class="rr"><span class="rk">TRI</span><span class="rv" id="ro-tris">—</span></div>
+  </div>
+
+</div><!-- end #vp -->
+
+<!-- SIDE PANEL -->
+<div id="panel">
+  <div id="ptabs">
+    <div class="ptab on" onclick="setPTab(this,'ov')">Overview</div>
+    <div class="ptab" onclick="setPTab(this,'tooth')">Tooth</div>
+    <div class="ptab" onclick="setPTab(this,'legend')">Legend</div>
+  </div>
+  <div id="pbody">
+
+    <!-- OVERVIEW pane -->
+    <div class="pane" id="pane-ov">
+      <div class="stat-grid">
+        <div class="stat-card sc-ok"><div class="stat-n" id="st-sound" style="color:var(--t1)">32</div><div class="stat-l">Sound</div></div>
+        <div class="stat-card sc-dg"><div class="stat-n" id="st-caries" style="color:var(--dg)">0</div><div class="stat-l">Caries</div></div>
+        <div class="stat-card sc-ac"><div class="stat-n" id="st-plan" style="color:var(--acs)">0</div><div class="stat-l">Planned Tx</div></div>
+        <div class="stat-card sc-t3"><div class="stat-n" id="st-miss" style="color:var(--t3)">0</div><div class="stat-l">Missing</div></div>
+      </div>
+      <div class="sec-title">Treatment Sequence</div>
+      <div class="stage-list" id="stage-list"></div>
+    </div>
+
+    <!-- TOOTH pane -->
+    <div class="pane" id="pane-tooth" style="display:none">
+      <div class="empty" id="te-empty">
+        <div class="empty-icon"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2C8 2 6 5 6 9c0 3 1 5 1 8s1 5 2 5 2-3 2-5 .5-3 1-3 1 1 1 3 .5 5 2 5 2-2 2-5 1-5 1-8c0-4-2-7-6-7z"/></svg></div>
+        <div class="empty-t">No tooth selected</div>
+        <div class="empty-s">Click any tooth in the<br>3D view to inspect and edit</div>
+      </div>
+      <div id="te-editor" style="display:none">
+        <div class="te-top">
+          <div class="te-fdi" id="te-fdi">—</div>
+          <div class="te-info">
+            <div class="te-nm" id="te-nm">—</div>
+            <div class="te-sub" id="te-sub">—</div>
+            <div class="te-badge" id="te-badge" style="display:none"></div>
+          </div>
+          <button class="te-close" onclick="clearSel()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+
+        <div class="fl"><span class="fl-sq" style="background:var(--dg)"></span>Affected Surfaces</div>
+        <div class="surf-wrap">
+          <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+            <rect x="50" y="8" width="100" height="90" rx="13" fill="#0d1220" stroke="#1a2540" stroke-width="1.5"/>
+            <!-- Buccal top -->
+            <path id="szb" class="szn" d="M50 21 Q50 8 63 8 L137 8 Q150 8 150 21 L150 32 L50 32Z" fill="#161e2e" stroke="#243358" stroke-width="1" onclick="tSurf('b')"/>
+            <!-- Lingual bottom -->
+            <path id="szl" class="szn" d="M50 74 L150 74 L150 85 Q150 98 137 98 L63 98 Q50 98 50 85Z" fill="#161e2e" stroke="#243358" stroke-width="1" onclick="tSurf('l')"/>
+            <!-- Mesial left -->
+            <rect id="szm" class="szn" x="50" y="32" width="17" height="42" fill="#161e2e" stroke="#243358" stroke-width="1" onclick="tSurf('m')"/>
+            <!-- Distal right -->
+            <rect id="szd" class="szn" x="133" y="32" width="17" height="42" fill="#161e2e" stroke="#243358" stroke-width="1" onclick="tSurf('d')"/>
+            <!-- Occlusal centre -->
+            <rect id="szo" class="szn" x="67" y="32" width="66" height="42" rx="7" fill="#161e2e" stroke="#243358" stroke-width="1" onclick="tSurf('o')"/>
+            <!-- Labels -->
+            <text x="100" y="22" text-anchor="middle" font-size="9" fill="#3d4e68" font-family="Inter,sans-serif" font-weight="600" pointer-events="none">B</text>
+            <text x="100" y="91" text-anchor="middle" font-size="9" fill="#3d4e68" font-family="Inter,sans-serif" font-weight="600" pointer-events="none">L</text>
+            <text x="59" y="56" text-anchor="middle" font-size="9" fill="#3d4e68" font-family="Inter,sans-serif" font-weight="600" pointer-events="none">M</text>
+            <text x="141" y="56" text-anchor="middle" font-size="9" fill="#3d4e68" font-family="Inter,sans-serif" font-weight="600" pointer-events="none">D</text>
+            <text x="100" y="56" text-anchor="middle" font-size="9" fill="#3d4e68" font-family="Inter,sans-serif" font-weight="700" pointer-events="none">O</text>
+          </svg>
+          <div class="surf-leg">
+            <div class="sl-it"><span class="sl-sq" style="background:var(--dg)"></span>Affected</div>
+            <div class="sl-it"><span class="sl-sq" style="background:var(--ac)"></span>Planned</div>
+          </div>
+        </div>
+
+        <div class="fl"><span class="fl-sq" style="background:var(--t3)"></span>Condition</div>
+        <select class="fd" id="te-cond" onchange="liveUp()">
+          <option value="sound">Sound</option>
+          <option value="caries">Caries / decay</option>
+          <option value="restored">Existing restoration</option>
+          <option value="crown">Existing crown</option>
+          <option value="missing">Missing / extracted</option>
+          <option value="implant">Implant (existing)</option>
+          <option value="unerupted">Unerupted</option>
+        </select>
+
+        <div class="fl"><span class="fl-sq" style="background:var(--ac)"></span>Proposed Treatment</div>
+        <select class="fd" id="te-tx" onchange="liveUp()">
+          <option value="none">No treatment</option>
+          <option value="composite">Composite restoration</option>
+          <option value="crown_p">Porcelain crown</option>
+          <option value="pfm">PFM crown</option>
+          <option value="extraction">Extraction</option>
+          <option value="implant_p">Implant + crown</option>
+          <option value="veneer">Porcelain veneer</option>
+          <option value="endo">Root canal (RCT)</option>
+          <option value="bridge">Bridge abutment</option>
+          <option value="watch">Monitor / watch</option>
+        </select>
+
+        <div class="fl"><span class="fl-sq" style="background:var(--t3)"></span>Mobility</div>
+        <div class="seg" id="te-mob">
+          <div class="seg-o on" onclick="pickSeg(this,'mob','0')">0</div>
+          <div class="seg-o" onclick="pickSeg(this,'mob','1')">I</div>
+          <div class="seg-o" onclick="pickSeg(this,'mob','2')">II</div>
+          <div class="seg-o" onclick="pickSeg(this,'mob','3')">III</div>
+        </div>
+
+        <div class="fl"><span class="fl-sq" style="background:var(--t3)"></span>Clinical Note</div>
+        <textarea class="fd" id="te-note" placeholder="Findings, patient concerns, special considerations…"></textarea>
+
+        <button class="btn-save" id="btn-save" onclick="saveTooth()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+    <!-- LEGEND pane -->
+    <div class="pane" id="pane-legend" style="display:none">
+      <div class="sec-title">Conditions</div>
+      <div class="leg-group">
+        <div class="leg-item"><div class="leg-sw" style="background:#e8e2d5"></div><div class="leg-text">Sound<small>Healthy natural enamel</small></div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#6b2b0d"></div><div class="leg-text">Caries<small>Active decay</small></div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#b8913a"></div><div class="leg-text">Restoration<small>Existing filling</small></div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#5a6878"></div><div class="leg-text">Crown<small>Existing prosthetic</small></div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#181e2c;border:1px dashed #3d4e68"></div><div class="leg-text">Missing<small>Edentulous space</small></div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#2d5a78"></div><div class="leg-text">Implant<small>Placed fixture</small></div></div>
+      </div>
+      <div class="sec-title">Proposed Treatments</div>
+      <div class="leg-group">
+        <div class="leg-item"><div class="leg-sw" style="background:#1d4ed8"></div><div class="leg-text">Crown / PFM</div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#b91c3a"></div><div class="leg-text">Extraction</div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#059669"></div><div class="leg-text">Implant placement</div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#b45309"></div><div class="leg-text">Endodontic / RCT</div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#6d28d9"></div><div class="leg-text">Veneer</div></div>
+        <div class="leg-item"><div class="leg-sw" style="background:#0e7490"></div><div class="leg-text">Composite</div></div>
+      </div>
+      <div class="sec-title">Controls</div>
+      <div class="kbd-list">
+        <div class="kbd-item"><span>Orbit</span><span class="kbd">Drag</span></div>
+        <div class="kbd-item"><span>Zoom</span><span class="kbd">Scroll</span></div>
+        <div class="kbd-item"><span>Select tooth</span><span class="kbd">Click</span></div>
+        <div class="kbd-item"><span>Zoom to tooth</span><span class="kbd">Dbl-click</span></div>
+        <div class="kbd-item"><span>Camera views</span><span class="kbd">F T L R</span></div>
+        <div class="kbd-item"><span>Deselect</span><span class="kbd">Esc</span></div>
+      </div>
+    </div>
+
+  </div><!-- #pbody -->
+</div><!-- #panel -->
+</div><!-- #body -->
+
+<!-- STATUS BAR -->
+<div id="sbar">
+  <span class="sdot"></span>
+  <span id="sb-main">Ready — load a GLB to begin</span>
+  <span class="ssep"></span>
+  <span id="sb-sel">No selection</span>
+  <div id="sbar-r">
+    <span class="sfps" id="sb-fps">— fps</span>
+    <span class="ssep"></span>
+    <span id="sb-geo">no model</span>
+    <span class="ssep"></span>
+    <span style="color:var(--t4)">DentaViz v1</span>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<!-- THREE.JS STACK — real loaders, real controls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════
+   DENTAVIZ v1 — STANDALONE HOSTED VIEWER
+   Clean architecture: load → parse → colour → interact
+   No overlays that can't be positioned correctly.
+   Selection = material emissive highlight only.
+   Gum = positioned from real tooth bounding boxes.
+════════════════════════════════════════════════════════════ */
+
+/* ── helpers ── */
+function $(id){return document.getElementById(id);}
+function text(id,v){var e=$(id);if(e)e.textContent=v;}
+function show(id){var e=$(id);if(e)e.style.display='block';}
+function hide(id){var e=$(id);if(e)e.style.display='none';}
+function showFlex(id){var e=$(id);if(e)e.style.display='flex';}
+function rgb(c){return 'rgb('+Math.round(c[0]*255)+','+Math.round(c[1]*255)+','+Math.round(c[2]*255)+')';}
+
+/* ── state ── */
+var S={
+  sel:null, ba:0,
+  gum:true, xray:false, explode:false, wire:false,
+  teeth:{}, surfs:{},
+  mode:'plan'
+};
+
+/* ── tooth data ── */
+var NAMES={
+  11:'Central incisor',12:'Lateral incisor',13:'Canine',14:'1st premolar',15:'2nd premolar',
+  16:'1st molar',17:'2nd molar',18:'3rd molar',
+  21:'Central incisor',22:'Lateral incisor',23:'Canine',24:'1st premolar',25:'2nd premolar',
+  26:'1st molar',27:'2nd molar',28:'3rd molar',
+  31:'Central incisor',32:'Lateral incisor',33:'Canine',34:'1st premolar',35:'2nd premolar',
+  36:'1st molar',37:'2nd molar',38:'3rd molar',
+  41:'Central incisor',42:'Lateral incisor',43:'Canine',44:'1st premolar',45:'2nd premolar',
+  46:'1st molar',47:'2nd molar',48:'3rd molar'
+};
+var QUADS={1:'Upper right · Q1',2:'Upper left · Q2',3:'Lower left · Q3',4:'Lower right · Q4'};
+var ALL=[11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,
+         31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48];
+function archOf(f){var q=(f/10)|0;return(q===1||q===2)?'upper':'lower';}
+function quadOf(f){return(f/10)|0;}
+
+/* ── colour maps ── */
+// Condition base colours [r,g,b] linear
+var COND_C={
+  sound:    [.93,.90,.84],
+  caries:   [.36,.14,.05],
+  restored: [.72,.58,.26],
+  crown:    [.55,.62,.74],
+  missing:  [.08,.10,.16],
+  implant:  [.28,.50,.64],
+  unerupted:[.30,.32,.40]
+};
+var COND_R={sound:.38,caries:.82,restored:.32,crown:.12,missing:.92,implant:.22,unerupted:.58};
+var COND_M={sound:.0,caries:.0,restored:.12,crown:.32,implant:.82,unerupted:.0};
+
+// Treatment colours (for ba>50)
+var TX_C={
+  composite:[.02,.68,.82], crown_p:[.28,.55,.98], pfm:[.46,.56,.83],
+  extraction:[.96,.25,.37], implant_p:[.06,.85,.63], veneer:[.66,.55,.98],
+  endo:[.97,.62,.05], bridge:[.10,.56,.30], watch:[.44,.5,.62]
+};
+var TX_R={composite:.2,crown_p:.18,pfm:.25,extraction:.6,implant_p:.18,veneer:.15,endo:.3,bridge:.2,watch:.5};
+var TX_M={composite:.0,crown_p:.04,pfm:.38,extraction:.0,implant_p:.8,veneer:.05,endo:.0,bridge:.12,watch:.0};
+
+function getCol(f){
+  var s=S.teeth[f]||{}, cond=s.cond||'sound', tx=s.tx||'none';
+  if(S.ba>50 && tx!=='none' && TX_C[tx]) return{c:TX_C[tx],r:TX_R[tx]||.2,m:TX_M[tx]||0};
+  return{c:COND_C[cond]||COND_C.sound, r:COND_R[cond]||.38, m:COND_M[cond]||0};
+}
+
+/* ════ THREE.JS ENGINE ════ */
+var rnd,scn,cam,ctrl,clk,rc,ms,pmremGen;
+var MODEL=null;           // THREE.Group — loaded gltf root
+var TEETH={};             // fdi -> {mesh, mat, origC, pos, size}
+var GUM=null;             // THREE.Group
+var SEL_RING=null;        // the ONE selection ring, repositioned on select
+var ff=0,ft=0;
+var modelBox=new THREE.Box3(), modelCtr=new THREE.Vector3(), modelRad=1;
+var modelLoaded=false;
+
+/* init */
+function initThree(){
+  var cv=$('cv'), vp=$('vp');
+  rnd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
+  rnd.setPixelRatio(Math.min(devicePixelRatio,2));
+  rnd.outputEncoding=THREE.sRGBEncoding;
+  rnd.toneMapping=THREE.ACESFilmicToneMapping;
+  rnd.toneMappingExposure=1.05;
+  rnd.shadowMap.enabled=true;
+  rnd.shadowMap.type=THREE.PCFSoftShadowMap;
+  rnd.shadowMap.autoUpdate=true;
+
+  scn=new THREE.Scene();
+  scn.background=new THREE.Color(0x07090f);
+  scn.fog=new THREE.FogExp2(0x07090f,.022);
+
+  cam=new THREE.PerspectiveCamera(40,1,.01,2000);
+  cam.position.set(0,2,12);
+
+  clk=new THREE.Clock();
+  rc=new THREE.Raycaster();
+  ms=new THREE.Vector2(-9,-9);
+
+  /* Environment — PMREM RoomEnvironment for realistic enamel reflections */
+  pmremGen=new THREE.PMREMGenerator(rnd);
+  pmremGen.compileEquirectangularShader();
+  try{
+    var roomEnv=new THREE.RoomEnvironment();
+    var envTex=pmremGen.fromScene(roomEnv,0.04).texture;
+    scn.environment=envTex;
+    roomEnv.dispose();
+  }catch(e){
+    scn.add(new THREE.HemisphereLight(0xffffff,0x223344,0.9));
+  }
+
+  /* Lights */
+  var key=new THREE.DirectionalLight(0xfff8f0,1.6);
+  key.position.set(5,10,7);
+  key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048);
+  key.shadow.camera.near=0.5; key.shadow.camera.far=60;
+  key.shadow.camera.left=-10; key.shadow.camera.right=10;
+  key.shadow.camera.top=8; key.shadow.camera.bottom=-8;
+  key.shadow.bias=-0.0004;
+  key.shadow.radius=3;
+  scn.add(key);
+  var fill=new THREE.DirectionalLight(0xb8d0ff,0.55);fill.position.set(-7,3,-5);scn.add(fill);
+  var rim=new THREE.DirectionalLight(0xffffff,0.4);rim.position.set(0,-3,-10);scn.add(rim);
+
+  /* Floor */
+  var fl=new THREE.Mesh(
+    new THREE.PlaneGeometry(80,80),
+    new THREE.MeshStandardMaterial({color:0x060810,roughness:0.88,metalness:0.15})
+  );
+  fl.rotation.x=-Math.PI/2; fl.position.y=-8; fl.receiveShadow=true;
+  scn.add(fl);
+  var grid=new THREE.GridHelper(60,60,0x0f1728,0x0f1728);grid.position.y=-7.96;scn.add(grid);
+
+  /* Selection ring — ONE ring, repositioned when selection changes */
+  var ringGeo=new THREE.TorusGeometry(1,0.035,16,60);
+  var ringMat=new THREE.MeshBasicMaterial({
+    color:0x60a5fa, transparent:true, opacity:0, depthWrite:false
+  });
+  SEL_RING=new THREE.Mesh(ringGeo,ringMat);
+  SEL_RING.visible=false;
+  SEL_RING.renderOrder=10;
+  scn.add(SEL_RING);
+
+  /* Orbit controls */
+  ctrl=new THREE.OrbitControls(cam,rnd.domElement);
+  ctrl.enableDamping=true; ctrl.dampingFactor=0.07;
+  ctrl.rotateSpeed=0.75; ctrl.zoomSpeed=0.85;
+  ctrl.minDistance=0.5; ctrl.maxDistance=500;
+  ctrl.enablePan=true; ctrl.panSpeed=0.6;
+
+  /* Events */
+  cv.addEventListener('mousemove',onMove);
+  cv.addEventListener('click',onClick);
+  cv.addEventListener('dblclick',onDblClick);
+  addEventListener('resize',resize);
+  addEventListener('keydown',onKey);
+
+  resize();
+  loop();
+}
+
+/* ── load GLB ── */
+function loadGLB(arrayBuffer, fileName){
+  var prog=$('ld-prog'), bar=$('ld-bar'), msg=$('ld-msg');
+  if(prog) prog.style.display='block';
+  if(bar) bar.style.width='60%';
+  if(msg) msg.textContent='Parsing with GLTFLoader…';
+
+  var loader=new THREE.GLTFLoader();
+  loader.parse(arrayBuffer,'',function(gltf){
+    if(bar) bar.style.width='85%';
+    if(msg) msg.textContent='Building scene…';
+
+    /* Remove old model */
+    if(MODEL){scn.remove(MODEL);MODEL=null;}
+    TEETH={};
+
+    MODEL=gltf.scene;
+    var totalTris=0;
+
+    /* Traverse: find all meshes, tag by parent node name (FDI) */
+    MODEL.traverse(function(node){
+      if(node.isMesh){
+        node.castShadow=true;
+        node.receiveShadow=true;
+        if(node.geometry && node.geometry.index)
+          totalTris+=node.geometry.index.count/3;
+        else if(node.geometry && node.geometry.attributes.position)
+          totalTris+=node.geometry.attributes.position.count/3;
+      }
+    });
+
+    /* Map FDI names — check node itself AND its parent chain */
+    MODEL.traverse(function(node){
+      var fdi=parseInt(node.name);
+      if(isNaN(fdi)||!NAMES[fdi]||TEETH[fdi]) return;
+      /* Find the first mesh under this node */
+      var meshNode=null;
+      if(node.isMesh) meshNode=node;
+      else node.traverse(function(c){if(c.isMesh&&!meshNode) meshNode=c;});
+      if(!meshNode) return;
+
+      /* Clone material so we can recolour independently */
+      var origMat=Array.isArray(meshNode.material)?meshNode.material[0]:meshNode.material;
+      var mat=origMat.clone();
+      meshNode.material=mat;
+
+      /* Compute world bounding box AFTER model is in scene */
+      TEETH[fdi]={mesh:meshNode, mat:mat, origC:mat.color?mat.color.clone():new THREE.Color(1,1,1)};
+    });
+
+    scn.add(MODEL);
+
+    /* Compute bounding boxes (after adding to scene so world transforms apply) */
+    modelBox.setFromObject(MODEL);
+    modelBox.getCenter(modelCtr);
+    var sz=new THREE.Vector3(); modelBox.getSize(sz);
+    modelRad=Math.max(sz.x,sz.y,sz.z)*0.5;
+
+    /* Per-tooth bounding boxes */
+    Object.keys(TEETH).forEach(function(f){
+      var t=TEETH[f];
+      var box=new THREE.Box3().setFromObject(t.mesh);
+      var c=new THREE.Vector3(); box.getCenter(c);
+      var s=new THREE.Vector3(); box.getSize(s);
+      t.pos=c.clone();
+      t.size=s.clone();
+      t.rxy=Math.max(s.x,s.z)*0.5;
+    });
+
+    var mapped=Object.keys(TEETH).length;
+    modelLoaded=true;
+
+    /* Apply treatment colours (demo seed) */
+    applyAll();
+    buildGum();
+    frameModel();
+
+    /* Update UI */
+    if(bar) bar.style.width='100%';
+    if(msg) msg.textContent='✓ '+mapped+' teeth · '+Math.round(totalTris).toLocaleString()+' tris';
+    setTimeout(function(){hide('ld-overlay');},600);
+
+    showFlex('badge');
+    text('badge-txt','Real anatomy · '+mapped+' teeth · '+Math.round(totalTris).toLocaleString()+' tris');
+    text('ro-model',(fileName||'').replace(/\.(glb|gltf)$/i,''));
+    text('ro-teeth',String(mapped));
+    text('ro-tris',Math.round(totalTris).toLocaleString());
+    text('sb-geo','real GLB · '+mapped+' teeth');
+    text('sb-main',(fileName||'model')+' loaded — click any tooth');
+
+  },function(err){
+    console.error('GLTFLoader error:',err);
+    if(msg) msg.textContent='❌ Failed: '+(err&&err.message||String(err));
+  });
+}
+
+/* ── frame camera to model ── */
+function frameModel(){
+  var d=modelRad/Math.tan(cam.fov*Math.PI/360)*1.6;
+  ctrl.target.copy(modelCtr);
+  cam.position.set(modelCtr.x, modelCtr.y+modelRad*0.3, modelCtr.z+d);
+  cam.near=modelRad*0.01; cam.far=modelRad*60;
+  cam.updateProjectionMatrix();
+  ctrl.update();
+}
+
+/* ── apply colours ── */
+function applyOne(f){
+  var t=TEETH[f]; if(!t) return;
+  var s=S.teeth[f]||{}, c=getCol(f);
+  var mat=t.mat;
+
+  /* Base colour */
+  if(s.cond==='sound'&&(!s.tx||s.tx==='none')){
+    /* Keep original model colour — just adjust roughness/metalness */
+    mat.color.copy(t.origC);
+    mat.roughness=0.38; mat.metalness=0.0;
+  } else {
+    mat.color.setRGB(c.c[0],c.c[1],c.c[2]);
+    mat.roughness=c.r; mat.metalness=c.m;
+  }
+
+  /* X-ray */
+  mat.transparent=S.xray;
+  mat.opacity=S.xray?0.32:1.0;
+  if(S.xray){ mat.color.setRGB(0.35,0.72,1.0); mat.roughness=0.1; mat.metalness=0.0; }
+
+  /* Wireframe */
+  mat.wireframe=S.wire;
+
+  /* Missing — hide mesh */
+  t.mesh.visible = (s.cond!=='missing');
+
+  /* Emissive highlight for treatments (subtle, not halos) */
+  if(mat.emissive){
+    var hasTx=s.tx&&s.tx!=='none';
+    if(hasTx && S.ba<50 && TX_C[s.tx]){
+      var tc=TX_C[s.tx];
+      mat.emissive.setRGB(tc[0]*0.12, tc[1]*0.12, tc[2]*0.12);
+    } else {
+      mat.emissive.setRGB(0,0,0);
+    }
+  }
+
+  mat.needsUpdate=true;
+
+  /* Explode */
+  if(t.mesh.parent){
+    var baseY=t.homeY!=null?t.homeY:(t.homeY=t.mesh.parent.position.y);
+    var off=S.explode?(archOf(f)==='upper'?modelRad*0.55:-modelRad*0.55):0;
+    t.mesh.parent.position.y=baseY+off;
+  }
+}
+function applyAll(){ALL.forEach(applyOne);}
+
+/* ── gum tissue ── */
+function buildGum(){
+  if(GUM){scn.remove(GUM);GUM.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});GUM=null;}
+  if(!S.gum||!modelLoaded) return;
+
+  var gumMat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(0.84,0.40,0.48),
+    roughness:0.72, metalness:0.0,
+    envMapIntensity:0.3
+  });
+
+  /* Build gum spine from tooth centroids at the CERVICAL level.
+     Upper teeth: cervical is at bottom of tooth (min Y of bounding box).
+     Lower teeth: cervical is at top of tooth (max Y of bounding box).
+     Gum tube follows those points + small inward offset. */
+  function makeGumCurve(fdis){
+    var pts=[];
+    fdis.forEach(function(f){
+      var t=TEETH[f]; if(!t||!t.pos) return;
+      var box=new THREE.Box3().setFromObject(t.mesh);
+      var cervY = archOf(f)==='upper' ? box.min.y : box.max.y;
+      // offset slightly away from teeth centre (inward, toward palate/tongue)
+      // archCentreZ ≈ modelCtr.z - small offset toward back for upper, front for lower
+      pts.push(new THREE.Vector3(t.pos.x, cervY, t.pos.z));
+    });
+    if(pts.length<3) return null;
+    // Sort by X so spline doesn't cross over
+    pts.sort(function(a,b){return a.x-b.x;});
+    return new THREE.CatmullRomCurve3(pts,false,'catmullrom',0.5);
+  }
+
+  var upperFDIs=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+  var lowerFDIs=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+
+  GUM=new THREE.Group();
+  var tubeR=modelRad*0.04;
+
+  [upperFDIs,lowerFDIs].forEach(function(fdis){
+    var curve=makeGumCurve(fdis);
+    if(!curve||curve.points.length<3) return;
+    var tube=new THREE.TubeGeometry(curve,100,tubeR,14,false);
+    var m=new THREE.Mesh(tube,gumMat.clone());
+    m.castShadow=true; m.receiveShadow=true;
+    GUM.add(m);
+  });
+
+  if(S.explode){
+    /* split upper/lower gum groups along with teeth */
+  }
+
+  scn.add(GUM);
+}
+
+/* ── render loop ── */
+function loop(){
+  requestAnimationFrame(loop);
+  var t=clk.getElapsedTime();
+
+  if(ctrl) ctrl.update();
+
+  /* Animate selection ring — pulse opacity + gentle scale */
+  if(S.sel && SEL_RING && SEL_RING.visible){
+    SEL_RING.material.opacity=0.55+Math.sin(t*3.2)*0.25;
+    /* Ring doesn't scale — fixed size set at selection time */
+  }
+
+  /* FPS */
+  ff++;
+  var now=performance.now();
+  if(now-ft>1000){ text('sb-fps',Math.round(ff*1000/(now-ft))+' fps'); ff=0; ft=now; }
+
+  rnd.render(scn,cam);
+}
+
+/* ── resize ── */
+function resize(){
+  var vp=$('vp'), w=vp.clientWidth, h=vp.clientHeight;
+  if(!rnd||!w||!h) return;
+  rnd.setSize(w,h,false);
+  cam.aspect=w/h; cam.updateProjectionMatrix();
+}
+
+/* ── raycasting ── */
+var hovFdi=null;
+function pick(e){
+  var vp=$('vp'), r=vp.getBoundingClientRect();
+  ms.x=((e.clientX-r.left)/r.width)*2-1;
+  ms.y=-((e.clientY-r.top)/r.height)*2+1;
+  rc.setFromCamera(ms,cam);
+  var meshes=Object.values(TEETH).map(function(t){return t.mesh;}).filter(function(m){return m&&m.visible;});
+  var hits=rc.intersectObjects(meshes,false);
+  if(hits.length){
+    for(var f in TEETH){ if(TEETH[f].mesh===hits[0].object) return parseInt(f); }
+  }
+  return null;
+}
+
+function onMove(e){
+  var f=pick(e);
+  if(f!==null){
+    hovFdi=f;
+    showTip(f,e);
+    $('cv').style.cursor='pointer';
+  } else {
+    hovFdi=null;
+    hide('tip');
+    $('cv').style.cursor='default';
+  }
+}
+function onClick(e){ if(hovFdi!==null) selTooth(hovFdi); else clearSel(); }
+function onDblClick(e){ if(hovFdi!==null) zoomTo(hovFdi); }
+
+function showTip(f,e){
+  var s=S.teeth[f]||{};
+  var vp=$('vp'), r=vp.getBoundingClientRect();
+  text('tip-fdi',String(f));
+  text('tip-nm',NAMES[f]||'—');
+  var cond=s.cond||'sound';
+  var condEl=$('tip-cond');
+  if(condEl) condEl.innerHTML='<span class="tip-dot" style="background:'+rgb(COND_C[cond]||COND_C.sound)+'"></span>'+cond;
+  var hasTx=s.tx&&s.tx!=='none';
+  var txRow=$('tip-tx-row');
+  if(txRow) txRow.style.display=hasTx?'flex':'none';
+  if(hasTx) text('tip-tx','→ '+s.tx.replace(/_p/,'').replace(/_/,' '));
+  var tip=$('tip');
+  if(tip){
+    tip.style.display='block';
+    var x=e.clientX-r.left, y=e.clientY-r.top;
+    tip.style.left=Math.min(x+16,vp.clientWidth-190)+'px';
+    tip.style.top=Math.max(8,y-50)+'px';
+  }
+}
+
+/* ── selection ── */
+function selTooth(f){
+  S.sel=f;
+  var t=TEETH[f];
+
+  /* Position the selection ring at this tooth's centroid */
+  if(t && t.pos && SEL_RING){
+    SEL_RING.position.copy(t.pos);
+    /* Orient ring horizontal (XZ plane) */
+    SEL_RING.rotation.set(Math.PI/2,0,0);
+    /* Scale ring to tooth radius + 20% margin */
+    var r=Math.max(t.rxy||0.5, modelRad*0.04)*1.25;
+    SEL_RING.scale.setScalar(r);
+    SEL_RING.visible=true;
+    SEL_RING.material.opacity=0.6;
+  }
+
+  /* Panel */
+  var s=S.teeth[f]||{}, q=quadOf(f);
+  hide('te-empty'); show('te-editor');
+  text('te-fdi',String(f));
+  text('te-nm',NAMES[f]||'—');
+  text('te-sub',QUADS[q]||'—');
+  $('te-cond').value=s.cond||'sound';
+  $('te-tx').value=s.tx||'none';
+  $('te-note').value=s.note||'';
+  setSeg('mob',s.mob||'0');
+
+  /* Badge */
+  var bdg=$('te-badge');
+  if(s.tx&&s.tx!=='none'&&TX_C[s.tx]){
+    var tc=TX_C[s.tx]; var ri=(tc[0]*255)|0, gi=(tc[1]*255)|0, bi=(tc[2]*255)|0;
+    bdg.style.cssText='display:inline-flex;background:rgba('+ri+','+gi+','+bi+',.16);color:rgb('+Math.min(255,ri+70)+','+Math.min(255,gi+70)+','+Math.min(255,bi+70)+');border:1px solid rgba('+ri+','+gi+','+bi+',.4)';
+    bdg.textContent='→ '+s.tx.replace(/_p/,'').replace(/_/,' ');
+  } else { bdg.style.display='none'; }
+
+  updSurf(f);
+
+  /* HUD */
+  showFlex('hud');
+  text('hud-fdi',String(f));
+  text('hud-name',NAMES[f]||'—');
+  text('hud-arch',QUADS[q]||'—');
+  var condEl=$('hud-cond');
+  if(condEl) condEl.innerHTML='<span class="hud-dot" style="background:'+rgb(COND_C[s.cond||'sound']||COND_C.sound)+'"></span>'+(s.cond||'sound');
+  var txEl=$('hud-tx');
+  if(txEl){ txEl.textContent=s.tx&&s.tx!=='none'?'→ '+s.tx.replace(/_/,' '):'—'; txEl.style.color=s.tx&&s.tx!=='none'?'var(--acs)':'var(--t3)'; }
+
+  text('sb-sel','FDI '+f+' · '+(NAMES[f]||''));
+
+  /* Switch to tooth tab */
+  setPTab(document.querySelectorAll('.ptab')[1],'tooth');
+}
+
+window.clearSel=function(){
+  S.sel=null;
+  if(SEL_RING) SEL_RING.visible=false;
+  hide('hud'); hide('te-editor'); show('te-empty');
+  text('sb-sel','No selection');
+};
+
+/* ── zoom to tooth ── */
+function zoomTo(f){
+  var t=TEETH[f]; if(!t||!t.pos) return;
+  var p=t.pos, d=Math.max(t.rxy||1,modelRad*0.12)*3.5;
+  var from={r:ctrl.object.position.clone(), tgt:ctrl.target.clone()};
+  var toPos=new THREE.Vector3(p.x+d*0.4, p.y+d*0.3, p.z+d*0.8);
+  var step=0, n=30;
+  var id=setInterval(function(){
+    step++;
+    var e=1-Math.pow(1-step/n,3);
+    cam.position.lerpVectors(from.r,toPos,e);
+    ctrl.target.lerpVectors(from.tgt,p,e);
+    cam.lookAt(ctrl.target);
+    if(step>=n)clearInterval(id);
+  },16);
+}
+
+/* ── surface diagram ── */
+var SURF_FILL={hit:'#f43f5e',proposed:'#4f8ff7',null:'#161e2e'};
+var SURF_STROKE={hit:'#fb7185',proposed:'#7db3ff',null:'#243358'};
+function updSurf(f){
+  var surfs=S.surfs[f]||{};
+  ['b','l','m','d','o'].forEach(function(s){
+    var el=$('sz'+s); if(!el) return;
+    var v=surfs[s]||'null';
+    el.setAttribute('fill',SURF_FILL[v]||SURF_FILL.null);
+    el.setAttribute('stroke',SURF_STROKE[v]||SURF_STROKE.null);
+  });
+}
+window.tSurf=function(s){
+  if(!S.sel) return;
+  if(!S.surfs[S.sel]) S.surfs[S.sel]={};
+  var cur=S.surfs[S.sel][s]||'null';
+  S.surfs[S.sel][s]=cur==='null'?'hit':cur==='hit'?'proposed':'null';
+  updSurf(S.sel);
+};
+
+/* ── live update & save ── */
+window.liveUp=function(){
+  if(!S.sel) return;
+  if(!S.teeth[S.sel]) S.teeth[S.sel]={};
+  S.teeth[S.sel].cond=$('te-cond').value;
+  S.teeth[S.sel].tx=$('te-tx').value;
+  applyOne(S.sel);
+  updStats(); updCount();
+  selTooth(S.sel); /* refresh panel */
+};
+window.saveTooth=function(){
+  if(!S.sel) return;
+  if(!S.teeth[S.sel]) S.teeth[S.sel]={};
+  var t=S.teeth[S.sel];
+  t.cond=$('te-cond').value; t.tx=$('te-tx').value; t.note=$('te-note').value;
+  var mobOn=document.querySelector('#te-mob .seg-o.on');
+  if(mobOn) t.mob=mobOn.dataset.val||'0';
+  applyOne(S.sel); updStats(); updCount();
+  var btn=$('btn-save');
+  btn.classList.add('ok');
+  btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved';
+  setTimeout(function(){
+    btn.classList.remove('ok');
+    btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Changes';
+  },1600);
+
+  /* postMessage to Bubble parent if embedded in iframe */
+  try{ parent.postMessage({type:'dv:tooth',fdi:S.sel,cond:t.cond,tx:t.tx,note:t.note},'*'); }catch(e){}
+};
+
+/* ── segmented control ── */
+window.pickSeg=function(el,key,val){
+  el.parentElement.querySelectorAll('.seg-o').forEach(function(o){o.classList.remove('on');});
+  el.classList.add('on');
+  if(S.sel){if(!S.teeth[S.sel])S.teeth[S.sel]={};S.teeth[S.sel][key]=val;}
+};
+function setSeg(key,val){
+  var container=$('te-'+key); if(!container) return;
+  container.querySelectorAll('.seg-o').forEach(function(o,i){
+    o.classList.toggle('on',o.dataset.val===val||(['0','1','2','3'][i]===val));
+  });
+}
+
+/* ── BA slider ── */
+window.onBA=function(v){
+  S.ba=v;
+  text('ba-pct',v+'%');
+  var inp=$('ba-range');
+  if(inp) inp.style.background='linear-gradient(90deg,var(--ac) '+v+'%,var(--sf3) '+v+'%)';
+  $('ba-cur').style.color=v<50?'var(--t2)':'var(--t4)';
+  $('ba-aft').style.color=v>=50?'var(--acs)':'var(--t4)';
+  applyAll();
+};
+
+/* ── view toggles ── */
+window.tgl=function(opt,el){
+  S[opt]=!S[opt]; el.classList.toggle('on',S[opt]);
+  if(opt==='gum') buildGum();
+  else if(opt==='xray'){
+    scn.background.set(S.xray?0x001428:0x07090f);
+    scn.fog.density=S.xray?0:0.022;
+    applyAll();
+  } else applyAll();
+};
+
+/* ── camera presets ── */
+window.camGo=function(v,el){
+  document.querySelectorAll('.cb').forEach(function(c){c.classList.remove('on');});
+  if(el) el.classList.add('on');
+  if(!modelLoaded) return;
+  var d=modelRad/Math.tan(cam.fov*Math.PI/360)*1.55;
+  var c=modelCtr;
+  var toPos,toTgt=c.clone();
+  if(v==='front')  toPos=new THREE.Vector3(c.x, c.y+modelRad*0.15, c.z+d);
+  else if(v==='top')   toPos=new THREE.Vector3(c.x, c.y+d*1.2, c.z);
+  else if(v==='btm')   toPos=new THREE.Vector3(c.x, c.y-d*1.2, c.z);
+  else if(v==='left')  toPos=new THREE.Vector3(c.x-d, c.y, c.z);
+  else if(v==='right') toPos=new THREE.Vector3(c.x+d, c.y, c.z);
+  else toPos=new THREE.Vector3(c.x+d*0.45, c.y+modelRad*0.38, c.z+d*0.8);
+  var from=cam.position.clone(), fromTgt=ctrl.target.clone();
+  var step=0, n=30;
+  var id=setInterval(function(){
+    step++;var e=1-Math.pow(1-step/n,3);
+    cam.position.lerpVectors(from,toPos,e);
+    ctrl.target.lerpVectors(fromTgt,toTgt,e);
+    cam.lookAt(ctrl.target);
+    ctrl.update();
+    if(step>=n)clearInterval(id);
+  },16);
+};
+
+/* ── keyboard ── */
+function onKey(e){
+  var k=e.key;
+  if(k==='f'||k==='F') camGo('front');
+  else if(k==='t'||k==='T') camGo('top');
+  else if(k==='l'||k==='L') camGo('left');
+  else if(k==='r'||k==='R') camGo('right');
+  else if(k==='Escape') clearSel();
+}
+
+/* ── stats ── */
+function updStats(){
+  var vs=Object.values(S.teeth);
+  var ca=vs.filter(function(t){return t.cond==='caries';}).length;
+  var mi=vs.filter(function(t){return t.cond==='missing';}).length;
+  var pl=vs.filter(function(t){return t.tx&&t.tx!=='none';}).length;
+  text('st-sound',String(Math.max(0,32-ca-mi)));
+  text('st-caries',String(ca));
+  text('st-plan',String(pl));
+  text('st-miss',String(mi));
+  buildStageList();
+}
+function updCount(){
+  var c=Object.keys(S.teeth).filter(function(k){
+    var t=S.teeth[k]; return t&&((t.cond&&t.cond!=='sound')||(t.tx&&t.tx!=='none'));
+  }).length;
+  text('changepill',c+' change'+(c!==1?'s':''));
+}
+function buildStageList(){
+  var ext=Object.keys(S.teeth).filter(function(k){return S.teeth[k].tx==='extraction';});
+  var rest=Object.keys(S.teeth).filter(function(k){return['composite','crown_p','pfm','veneer','endo'].indexOf(S.teeth[k].tx)>-1;});
+  var imp=Object.keys(S.teeth).filter(function(k){return S.teeth[k].tx==='implant_p';});
+  var stages=[
+    {n:1,t:'Examination',d:'Charting · radiographs · photographs',tags:[],act:true},
+    {n:2,t:'Extractions',d:ext.length?'Remove non-restorable':'None planned',tags:ext,act:ext.length>0},
+    {n:3,t:'Restorations & RCT',d:rest.length?'Fillings, crowns, endodontics':'None planned',tags:rest,act:rest.length>0},
+    {n:4,t:'Implant surgery',d:imp.length?'Placement & healing':'None planned',tags:imp,act:imp.length>0},
+    {n:5,t:'Final delivery',d:'Crown seating · occlusal check · polish',tags:[],act:false}
+  ];
+  var el=$('stage-list'); if(!el) return;
+  el.innerHTML=stages.map(function(s){
+    return '<div class="stage'+(s.act?' act':'')+'">'
+      +'<div class="stage-line"></div>'
+      +'<div class="stage-dot">'+s.n+'</div>'
+      +'<div class="stage-body">'
+        +'<div class="stage-t">'+s.t+'</div>'
+        +'<div class="stage-d">'+s.d+'</div>'
+        +(s.tags.length?'<div class="stage-tags">'+s.tags.slice(0,10).map(function(x){return'<span class="ftag">'+x+'</span>';}).join('')+'</div>':'')
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+/* ── navigation / panel tabs ── */
+window.setNav=function(el,mode){
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('on');});
+  el.classList.add('on'); S.mode=mode;
+  var pp=$('panel');
+  if(pp) pp.style.opacity=(mode==='patient')?'0':'1';
+  if(mode==='ba'){ $('ba-range').value=50; onBA(50); }
+};
+window.setPTab=function(el,id){
+  document.querySelectorAll('.ptab').forEach(function(t){t.classList.remove('on');});
+  if(el) el.classList.add('on');
+  ['ov','tooth','legend'].forEach(function(x){
+    var p=$('pane-'+x); if(p) p.style.display=x===id?'block':'none';
+  });
+};
+
+/* ── reset ── */
+window.resetAll=function(){
+  S.teeth={}; S.surfs={}; S.sel=null; S.ba=0;
+  var br=$('ba-range'); if(br){br.value=0;onBA(0);}
+  clearSel(); applyAll(); updStats(); updCount();
+};
+
+/* ── loader UI ── */
+window.openLoader=function(){ show('ld-overlay'); };
+window.handleFile=function(file){
+  if(!file) return;
+  var prog=$('ld-prog'), bar=$('ld-bar'), msg=$('ld-msg');
+  if(prog) prog.style.display='block';
+  if(msg) msg.textContent='Reading '+file.name+'…';
+  if(bar) bar.style.width='15%';
+  var reader=new FileReader();
+  reader.onprogress=function(e){
+    if(e.lengthComputable&&bar) bar.style.width=(15+e.loaded/e.total*40)+'%';
+  };
+  reader.onload=function(ev){
+    loadGLB(ev.target.result, file.name);
+  };
+  reader.readAsArrayBuffer(file);
+};
+window.skipToDemo=function(){
+  hide('ld-overlay');
+  text('sb-main','Demo mode — no model loaded. Click Load Model to add your GLB.');
+  text('sb-geo','no model');
+};
+
+/* Drag-and-drop on the drop zone */
+(function(){
+  var dz=$('ld-dz');
+  if(!dz) return;
+  ['dragover','dragenter'].forEach(function(ev){
+    dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('drag');});
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('drag');});
+  });
+  dz.addEventListener('drop',function(e){
+    var f=e.dataTransfer.files[0]; if(f) handleFile(f);
+  });
+})();
+
+/* ── postMessage bridge (Bubble iframe integration) ── */
+window.addEventListener('message',function(e){
+  var d=e.data; if(!d||!d.type) return;
+  if(d.type==='dv:setState'&&d.teeth){
+    S.teeth=d.teeth; applyAll(); updStats(); updCount();
+  }
+  if(d.type==='dv:selectTooth'&&d.fdi&&TEETH[d.fdi]) selTooth(d.fdi);
+  if(d.type==='dv:clearSel') clearSel();
+  if(d.type==='dv:setBA'&&d.value!=null){ S.ba=d.value; $('ba-range').value=d.value; onBA(d.value); }
+});
+
+/* ── demo seed ── */
+function seed(){
+  S.teeth[16]={cond:'caries',tx:'crown_p',mob:'1',note:'MOD caries to pulp. Full coverage crown.'};
+  S.teeth[26]={cond:'crown',tx:'none'};
+  S.teeth[36]={cond:'missing',tx:'implant_p',note:'Long-standing edentulous site.'};
+  S.teeth[46]={cond:'caries',tx:'endo',note:'Irreversible pulpitis. RCT before crown.'};
+  S.teeth[14]={cond:'restored',tx:'none'};
+  S.teeth[24]={cond:'caries',tx:'composite',note:'Small mesial lesion.'};
+  S.teeth[25]={cond:'sound',tx:'veneer'};
+  S.teeth[11]={cond:'sound',tx:'veneer'};
+  S.teeth[21]={cond:'sound',tx:'veneer'};
+  S.surfs[16]={b:'hit',o:'hit',m:'hit'};
+  S.surfs[46]={b:'hit',o:'hit'};
+  updStats(); updCount();
+}
+
+/* ── boot ── */
+function boot(){
+  if(typeof THREE==='undefined'){text('sb-main','❌ Three.js failed to load');return;}
+  if(typeof THREE.GLTFLoader==='undefined'){text('sb-main','❌ GLTFLoader failed — check network');return;}
+  if(typeof THREE.OrbitControls==='undefined'){text('sb-main','❌ OrbitControls failed — check network');return;}
+  initThree();
+  seed();
+  updStats(); updCount();
+  buildStageList();
+}
+
+if(document.readyState==='complete') boot();
+else window.addEventListener('load',boot);
+</script>
+</body>
+</html>
