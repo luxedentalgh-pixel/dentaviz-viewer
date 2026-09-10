@@ -247,6 +247,120 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
 
 /* Divider */
 .divl{height:1px;background:var(--bd);margin:12px 0}
+
+/* ═══ NEW: Mode containers ═══ */
+#mode-stages,#mode-ba,#mode-patient{display:none;flex:1;overflow-y:auto;overflow-x:hidden}
+.mode-hd{padding:14px 14px 0}
+.mode-title{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.mode-sub{font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:14px}
+
+/* ═══ Phase cards (Visit Stages) ═══ */
+.phase-card{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;margin:0 14px 10px;overflow:hidden}
+.phase-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd)}
+.phase-num{width:22px;height:22px;border-radius:50%;background:var(--sf3);border:1.5px solid var(--bd2);display:grid;place-items:center;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--t3);flex-shrink:0}
+.phase-title-inp{flex:1;background:transparent;border:none;color:var(--t1);font-size:12.5px;font-weight:600;font-family:var(--sans);padding:2px 4px;border-radius:4px}
+.phase-title-inp:focus{outline:none;background:var(--sf3)}
+.phase-del{width:20px;height:20px;border-radius:5px;border:none;background:transparent;color:var(--t4);cursor:pointer;display:grid;place-items:center;flex-shrink:0}
+.phase-del:hover{color:var(--dg);background:rgba(244,63,94,.1)}
+.phase-del svg{width:11px;height:11px}
+.phase-body{padding:10px 12px}
+.phase-row{display:flex;gap:8px;margin-bottom:8px}
+.phase-status{flex:1;font-size:11px;padding:6px 8px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t2);font-family:var(--sans)}
+.phase-date{width:118px;font-size:11px;padding:6px 8px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t2);font-family:var(--sans)}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.03em;text-transform:uppercase}
+.status-notstarted{background:var(--sf3);color:var(--t3)}
+.status-inprogress{background:var(--ac2);color:var(--acs)}
+.status-completed{background:rgba(16,217,160,.12);color:var(--ok)}
+.phase-notes{width:100%;font-size:11.5px;padding:7px 9px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t2);font-family:var(--sans);resize:none;height:44px;margin-bottom:8px;line-height:1.5}
+.phase-teeth-lbl{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.phase-teeth{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:20px}
+.pchip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 4px 3px 8px;background:var(--ac2);color:var(--acs);border-radius:6px;border:1px solid rgba(79,143,247,.2);cursor:pointer;transition:.12s}
+.pchip:hover{background:rgba(79,143,247,.22)}
+.pchip button{width:14px;height:14px;border:none;background:rgba(255,255,255,.08);border-radius:50%;color:var(--t2);cursor:pointer;display:grid;place-items:center;font-size:9px;line-height:1}
+.pchip button:hover{background:var(--dg);color:#fff}
+.phase-add-tooth{display:flex;gap:6px}
+.phase-add-tooth select{flex:1;font-size:11px;padding:6px 8px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t2);font-family:var(--sans)}
+.phase-add-tooth button{padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--acs);font-size:11px;font-weight:700;cursor:pointer}
+.phase-add-tooth button:hover{background:var(--ac2)}
+.btn-add-phase{margin:4px 14px 16px;padding:9px;border-radius:9px;border:1.5px dashed var(--bd3);background:transparent;color:var(--t3);font-size:11.5px;font-weight:600;font-family:var(--sans);cursor:pointer;width:calc(100% - 28px);display:flex;align-items:center;justify-content:center;gap:6px;transition:.13s}
+.btn-add-phase:hover{border-color:var(--ac);color:var(--acs);background:var(--ac2)}
+
+/* ═══ Before/After compare mode ═══ */
+.cmp-stat-row{display:flex;gap:8px;padding:0 14px;margin-bottom:14px}
+.cmp-stat{flex:1;padding:11px;border-radius:10px;background:var(--sf2);border:1px solid var(--bd);text-align:center}
+.cmp-stat-n{font-size:22px;font-weight:250;font-family:var(--mono);color:var(--t1)}
+.cmp-stat-l{font-size:9px;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.cmp-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--bd);cursor:pointer;transition:.12s}
+.cmp-row:hover{background:var(--sf2)}
+.cmp-fdi{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--t1);width:26px;flex-shrink:0}
+.cmp-arrow{display:flex;align-items:center;gap:6px;flex:1;font-size:11px}
+.cmp-from{color:var(--t3)}
+.cmp-to{color:var(--acs);font-weight:600}
+.cmp-sep{color:var(--t4)}
+.btn-capture{margin:14px;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--ac),var(--acg));color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;width:calc(100% - 28px);display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 14px rgba(79,143,247,.3)}
+.btn-capture svg{width:14px;height:14px}
+.cmp-empty{text-align:center;padding:40px 20px;color:var(--t4);font-size:11.5px;line-height:1.7}
+
+/* ═══ Patient friendly view ═══ */
+.pv-card{margin:0 14px 14px;padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--ac2),var(--sf2));border:1px solid rgba(79,143,247,.2)}
+.pv-fdi{font-size:34px;font-weight:200;font-family:var(--mono);color:var(--t1);line-height:1}
+.pv-name{font-size:13px;font-weight:600;color:var(--t1);margin-top:2px}
+.pv-text{font-size:12px;color:var(--t2);line-height:1.7;margin-top:10px}
+.pv-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px;margin-bottom:16px}
+.pv-sum{padding:14px;border-radius:12px;background:var(--sf2);border:1px solid var(--bd);text-align:center}
+.pv-sum-n{font-size:24px;font-weight:250;font-family:var(--mono)}
+.pv-sum-l{font-size:10px;color:var(--t4);margin-top:4px;font-weight:500}
+.pv-legend-item{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.pv-legend-sw{width:18px;height:18px;border-radius:6px;flex-shrink:0}
+.pv-legend-t{font-size:12.5px;color:var(--t2);font-weight:500}
+
+/* ═══ Advisories (intelligence layer) ═══ */
+.adv-card{display:flex;gap:9px;padding:10px 11px;border-radius:10px;margin-bottom:7px;cursor:pointer;transition:.12s;border:1px solid transparent}
+.adv-card:hover{filter:brightness(1.15)}
+.adv-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+.adv-info{background:var(--ac2);border-color:rgba(79,143,247,.18)}
+.adv-ic{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+.adv-warn .adv-ic{color:var(--wn)}
+.adv-info .adv-ic{color:var(--acs)}
+.adv-txt{font-size:11px;color:var(--t2);line-height:1.5}
+.adv-txt b{color:var(--t1);font-family:var(--mono)}
+.adv-empty{font-size:11px;color:var(--t4);padding:6px 2px}
+
+/* ═══ Filtered teeth (stat card drill-down) ═══ */
+.filt-hd{display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px}
+.filt-clear{font-size:10px;color:var(--t4);cursor:pointer;font-weight:600}
+.filt-clear:hover{color:var(--dg)}
+.filt-chips{display:flex;flex-wrap:wrap;gap:5px}
+.fchip{font-size:11px;font-weight:600;font-family:var(--mono);padding:5px 10px;background:var(--sf2);color:var(--t2);border-radius:7px;border:1px solid var(--bd2);cursor:pointer;transition:.12s}
+.fchip:hover{background:var(--ac2);color:var(--acs);border-color:rgba(79,143,247,.3)}
+
+/* ═══ Related teeth (tooth editor) ═══ */
+.rel-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rel-lbl{font-size:10px;color:var(--t4);font-weight:600;min-width:58px}
+.rel-chips{display:flex;flex-wrap:wrap;gap:4px}
+.rchip{font-size:10px;font-weight:700;font-family:var(--mono);padding:3px 8px;border-radius:6px;cursor:pointer;transition:.12s;border:1px solid var(--bd2);background:var(--sf3);color:var(--t2)}
+.rchip:hover{background:var(--ac2);color:var(--acs)}
+.rchip.on{background:var(--ac2);color:var(--acs);border-color:rgba(79,143,247,.35)}
+.rchip.none{color:var(--t4);cursor:default;font-weight:400;border-style:dashed}
+
+/* ═══ Activity tab ═══ */
+.act-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer;transition:.12s}
+.act-item:hover{background:var(--sf2)}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--ac);flex-shrink:0;margin-top:5px}
+.act-body{flex:1}
+.act-txt{font-size:11.5px;color:var(--t2);line-height:1.5}
+.act-txt b{color:var(--t1)}
+.act-time{font-size:9.5px;color:var(--t4);margin-top:2px;font-family:var(--mono)}
+.act-empty{text-align:center;padding:48px 20px;color:var(--t4);font-size:11.5px;line-height:1.7}
+
+/* ═══ Patient info popover ═══ */
+#pat-pop{position:absolute;top:52px;left:200px;width:230px;border-radius:12px;padding:14px;z-index:50;display:none}
+.pat-fld{margin-bottom:9px}
+.pat-fld label{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px}
+.pat-fld input{width:100%;font-size:12px;padding:7px 9px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf3);color:var(--t1);font-family:var(--sans)}
+.pat-fld input:focus{outline:none;border-color:var(--ac)}
+.pat-pop-close{width:100%;margin-top:4px;padding:7px;border-radius:7px;border:none;background:var(--ac);color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -267,6 +381,16 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
     <div class="ntab" onclick="setNav(this,'patient')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Patient View</div>
   </div>
   <div class="hsp"></div>
+  <div class="pat-chip" onclick="togglePatPop(event)" style="display:flex;align-items:center;gap:8px;padding:5px 11px 5px 6px;background:var(--sf2);border:1px solid var(--bd2);border-radius:100px;cursor:pointer;margin-right:6px">
+    <div class="pat-av" id="pat-av" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--pu));display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff">DP</div>
+    <div><div class="pat-name" id="pat-name-disp" style="font-size:11px;font-weight:600;color:var(--t1)">Demo Patient</div><div class="pat-meta" id="pat-meta-disp" style="font-size:9px;color:var(--t4)">Chart —</div></div>
+  </div>
+  <div class="glass" id="pat-pop">
+    <div class="pat-fld"><label>Patient Name</label><input type="text" id="pat-in-name" value="Demo Patient" oninput="updatePatient()"></div>
+    <div class="pat-fld"><label>Chart Number</label><input type="text" id="pat-in-chart" value="" placeholder="e.g. LDS-0421" oninput="updatePatient()"></div>
+    <div class="pat-fld"><label>Date of Birth</label><input type="text" id="pat-in-dob" value="" placeholder="e.g. 12 Mar 1990" oninput="updatePatient()"></div>
+    <button class="pat-pop-close" onclick="togglePatPop(event)">Done</button>
+  </div>
   <button class="hbtn blue" onclick="openLoader()">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Load Model
   </button>
@@ -380,23 +504,34 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
 
 <!-- SIDE PANEL -->
 <div id="panel">
+
+<div id="mode-plan" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
   <div id="ptabs">
     <div class="ptab on" onclick="setPTab(this,'ov')">Overview</div>
     <div class="ptab" onclick="setPTab(this,'tooth')">Tooth</div>
     <div class="ptab" onclick="setPTab(this,'legend')">Legend</div>
+    <div class="ptab" onclick="setPTab(this,'activity')">Activity</div>
   </div>
   <div id="pbody">
 
     <!-- OVERVIEW pane -->
     <div class="pane" id="pane-ov">
       <div class="stat-grid">
-        <div class="stat-card sc-ok"><div class="stat-n" id="st-sound" style="color:var(--t1)">32</div><div class="stat-l">Sound</div></div>
-        <div class="stat-card sc-dg"><div class="stat-n" id="st-caries" style="color:var(--dg)">0</div><div class="stat-l">Caries</div></div>
-        <div class="stat-card sc-ac"><div class="stat-n" id="st-plan" style="color:var(--acs)">0</div><div class="stat-l">Planned Tx</div></div>
-        <div class="stat-card sc-t3"><div class="stat-n" id="st-miss" style="color:var(--t3)">0</div><div class="stat-l">Missing</div></div>
+        <div class="stat-card sc-ok" onclick="filterTeeth(\'sound\')" style="cursor:pointer"><div class="stat-n" id="st-sound" style="color:var(--t1)">32</div><div class="stat-l">Sound</div></div>
+        <div class="stat-card sc-dg" onclick="filterTeeth(\'caries\')" style="cursor:pointer"><div class="stat-n" id="st-caries" style="color:var(--dg)">0</div><div class="stat-l">Caries</div></div>
+        <div class="stat-card sc-ac" onclick="filterTeeth(\'planned\')" style="cursor:pointer"><div class="stat-n" id="st-plan" style="color:var(--acs)">0</div><div class="stat-l">Planned Tx</div></div>
+        <div class="stat-card sc-t3" onclick="filterTeeth(\'missing\')" style="cursor:pointer"><div class="stat-n" id="st-miss" style="color:var(--t3)">0</div><div class="stat-l">Missing</div></div>
       </div>
       <div class="sec-title">Treatment Sequence</div>
       <div class="stage-list" id="stage-list"></div>
+
+      <div class="sec-title">Clinical Advisories</div>
+      <div id="advisory-list"></div>
+
+      <div id="filt-section" style="display:none">
+        <div class="filt-hd"><span class="sec-title" style="margin:0" id="filt-title">Filtered</span><span class="filt-clear" onclick="clearFilter()">✕ Clear</span></div>
+        <div class="filt-chips" id="filt-chips"></div>
+      </div>
     </div>
 
     <!-- TOOTH pane -->
@@ -480,6 +615,13 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
         <div class="fl"><span class="fl-sq" style="background:var(--t3)"></span>Clinical Note</div>
         <textarea class="fd" id="te-note" placeholder="Findings, patient concerns, special considerations…"></textarea>
 
+        <div class="fl"><span class="fl-sq" style="background:var(--pu)"></span>Related Teeth</div>
+        <div id="related-block">
+          <div class="rel-row"><span class="rel-lbl">Adjacent</span><div class="rel-chips" id="rel-adjacent"></div></div>
+          <div class="rel-row"><span class="rel-lbl">Opposing</span><div class="rel-chips" id="rel-opposing"></div></div>
+          <div class="rel-row" id="rel-bridge-row" style="display:none"><span class="rel-lbl">Bridge grp</span><div class="rel-chips" id="rel-bridge"></div></div>
+        </div>
+
         <button class="btn-save" id="btn-save" onclick="saveTooth()">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Save Changes
@@ -518,7 +660,63 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
       </div>
     </div>
 
+    <!-- ACTIVITY pane -->
+    <div class="pane" id="pane-activity" style="display:none;padding:0">
+      <div id="activity-list"></div>
+    </div>
+
   </div><!-- #pbody -->
+</div><!-- #mode-plan -->
+
+<!-- ═══ VISIT STAGES mode ═══ -->
+<div id="mode-stages">
+  <div class="mode-hd">
+    <div class="mode-title">Treatment Phases</div>
+    <div class="mode-sub">Plan and track the sequence of care. Each phase can hold multiple teeth — click a chip to highlight it in the 3D view.</div>
+  </div>
+  <div id="phase-list"></div>
+  <button class="btn-add-phase" onclick="addPhase()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Phase
+  </button>
+</div>
+
+<!-- ═══ BEFORE / AFTER mode ═══ -->
+<div id="mode-ba">
+  <div class="mode-hd">
+    <div class="mode-title">Before / After Comparison</div>
+    <div class="mode-sub">Every tooth with a proposed treatment, current condition versus the planned outcome. Use the slider at the bottom of the 3D view to preview.</div>
+  </div>
+  <div class="cmp-stat-row">
+    <div class="cmp-stat"><div class="cmp-stat-n" id="cmp-total">0</div><div class="cmp-stat-l">Teeth changing</div></div>
+    <div class="cmp-stat"><div class="cmp-stat-n" id="cmp-pct">0%</div><div class="cmp-stat-l">Preview blend</div></div>
+  </div>
+  <div id="cmp-list"></div>
+  <button class="btn-capture" onclick="captureSnapshot()">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    Capture Comparison Image
+  </button>
+</div>
+
+<!-- ═══ PATIENT VIEW mode ═══ -->
+<div id="mode-patient">
+  <div class="mode-hd">
+    <div class="mode-title">Your Treatment Plan</div>
+    <div class="mode-sub" id="pv-intro">Click on any tooth in the 3D model to learn more about it, in plain language.</div>
+  </div>
+  <div id="pv-content">
+    <div class="pv-summary-grid">
+      <div class="pv-sum"><div class="pv-sum-n" id="pv-healthy" style="color:var(--ok)">32</div><div class="pv-sum-l">Healthy teeth</div></div>
+      <div class="pv-sum"><div class="pv-sum-n" id="pv-attention" style="color:var(--wn)">0</div><div class="pv-sum-l">Need attention</div></div>
+    </div>
+    <div class="sec-title" style="margin:0 14px 8px">What the colours mean</div>
+    <div class="pv-legend-item"><div class="pv-legend-sw" style="background:#e8e2d5"></div><div class="pv-legend-t">Healthy tooth</div></div>
+    <div class="pv-legend-item"><div class="pv-legend-sw" style="background:#6b2b0d"></div><div class="pv-legend-t">Needs treatment (decay)</div></div>
+    <div class="pv-legend-item"><div class="pv-legend-sw" style="background:#4f8ff7"></div><div class="pv-legend-t">Treatment being planned</div></div>
+    <div class="pv-legend-item"><div class="pv-legend-sw" style="background:#181e2c;border:1px dashed #3d4e68"></div><div class="pv-legend-t">Missing tooth</div></div>
+  </div>
+</div>
+
 </div><!-- #panel -->
 </div><!-- #body -->
 
@@ -567,7 +765,9 @@ var S={
   sel:null, ba:0,
   gum:true, xray:false, explode:false, wire:false,
   teeth:{}, surfs:{},
-  mode:'plan'
+  mode:'plan',
+  phases:[], activity:[], relations:{}, filter:null,
+  patient:{name:'Demo Patient',chart:'',dob:''}
 };
 
 /* ── tooth data ── */
@@ -586,6 +786,25 @@ var ALL=[11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,
          31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48];
 function archOf(f){var q=(f/10)|0;return(q===1||q===2)?'upper':'lower';}
 function quadOf(f){return(f/10)|0;}
+
+/* ── DENTAL ADJACENCY / OPPOSING MAPS ── */
+var ARCH_ORDER_UPPER=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+var ARCH_ORDER_LOWER=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+var ADJ={}; // fdi -> {mesial:fdi|null, distal:fdi|null}
+[ARCH_ORDER_UPPER,ARCH_ORDER_LOWER].forEach(function(order){
+  order.forEach(function(f,i){
+    ADJ[f]={mesial:order[i-1]||null, distal:order[i+1]||null};
+  });
+});
+var OPP={}; // fdi -> opposing fdi (occlusion partner)
+var OPPQ={1:4,2:3,3:2,4:1};
+ALL.forEach(function(f){
+  var q=quadOf(f), pos=f%10;
+  OPP[f]=OPPQ[q]*10+pos;
+});
+function adjacentOf(f){return [ADJ[f]?ADJ[f].mesial:null, ADJ[f]?ADJ[f].distal:null].filter(Boolean);}
+function opposingOf(f){return OPP[f]||null;}
+
 
 /* ── colour maps ── */
 // Condition base colours [r,g,b] linear
@@ -1162,6 +1381,9 @@ function selTooth(f){
 
   text('sb-sel','FDI '+f+' · '+(NAMES[f]||''));
 
+  renderRelated(f);
+  if(S.mode==='patient') renderPatientTooth(f);
+
   /* Switch to tooth tab */
   setPTab(document.querySelectorAll('.ptab')[1],'tooth');
 }
@@ -1225,10 +1447,16 @@ window.saveTooth=function(){
   if(!S.sel) return;
   if(!S.teeth[S.sel]) S.teeth[S.sel]={};
   var t=S.teeth[S.sel];
+  var prevCond=t.cond, prevTx=t.tx;
   t.cond=$('te-cond').value; t.tx=$('te-tx').value; t.note=$('te-note').value;
   var mobOn=document.querySelector('#te-mob .seg-o.on');
   if(mobOn) t.mob=mobOn.dataset.val||'0';
   applyOne(S.sel); updStats(); updCount();
+  logActivity(S.sel, prevCond, prevTx, t.cond, t.tx);
+  renderAdvisories();
+  if(S.filter) renderFilteredChips();
+  if(S.mode==='stages') renderPhases();
+  if(S.mode==='ba') renderCompare();
   var btn=$('btn-save');
   btn.classList.add('ok');
   btn.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved';
@@ -1327,6 +1555,8 @@ function updStats(){
   text('st-plan',String(pl));
   text('st-miss',String(mi));
   buildStageList();
+  renderAdvisories();
+  if(S.mode==='patient') renderPatientSummary();
 }
 function updCount(){
   var c=Object.keys(S.teeth).filter(function(k){
@@ -1363,16 +1593,26 @@ function buildStageList(){
 window.setNav=function(el,mode){
   document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('on');});
   el.classList.add('on'); S.mode=mode;
-  var pp=$('panel');
-  if(pp) pp.style.opacity=(mode==='patient')?'0':'1';
-  if(mode==='ba'){ $('ba-range').value=50; onBA(50); }
+
+  /* Show the right mode container, hide the rest */
+  ['plan','stages','ba','patient'].forEach(function(m){
+    var c=$('mode-'+m); if(c) c.style.display=(m===mode)?(m==='plan'?'flex':'block'):'none';
+  });
+
+  /* View tools only make sense in Treatment Plan mode */
+  var vt=$('vtools'); if(vt){ vt.style.opacity=(mode==='plan')?'1':'0'; vt.style.pointerEvents=(mode==='plan')?'auto':'none'; }
+
+  if(mode==='stages') renderPhases();
+  if(mode==='ba'){ $('ba-range').value=50; onBA(50); renderCompare(); }
+  if(mode==='patient'){ renderPatientSummary(); if(S.sel) renderPatientTooth(S.sel); }
 };
 window.setPTab=function(el,id){
   document.querySelectorAll('.ptab').forEach(function(t){t.classList.remove('on');});
   if(el) el.classList.add('on');
-  ['ov','tooth','legend'].forEach(function(x){
+  ['ov','tooth','legend','activity'].forEach(function(x){
     var p=$('pane-'+x); if(p) p.style.display=x===id?'block':'none';
   });
+  if(id==='activity') renderActivity();
 };
 
 /* ── reset ── */
@@ -1501,6 +1741,298 @@ function autoLoadModel(){
     });
 }
 
+/* ══════════════════════════════════════════════════════════
+   VISIT STAGES — Phase manager (real, editable)
+══════════════════════════════════════════════════════════ */
+function defaultPhases(){
+  return [
+    {id:1,title:'Examination & Records',status:'completed',date:'',notes:'Charting, radiographs, photographs.',teeth:[]},
+    {id:2,title:'Extractions',status:'notstarted',date:'',notes:'',teeth:ALL.filter(function(f){return S.teeth[f]&&S.teeth[f].tx==='extraction';})},
+    {id:3,title:'Restorations & RCT',status:'notstarted',date:'',notes:'',teeth:ALL.filter(function(f){return S.teeth[f]&&['composite','crown_p','pfm','veneer','endo'].indexOf(S.teeth[f].tx)>-1;})},
+    {id:4,title:'Implant Surgery',status:'notstarted',date:'',notes:'',teeth:ALL.filter(function(f){return S.teeth[f]&&S.teeth[f].tx==='implant_p';})},
+    {id:5,title:'Final Delivery',status:'notstarted',date:'',notes:'Crown seating, occlusal check, polish.',teeth:[]}
+  ];
+}
+var phaseSeq=6;
+window.addPhase=function(){
+  S.phases.push({id:phaseSeq++,title:'New Phase',status:'notstarted',date:'',notes:'',teeth:[]});
+  renderPhases();
+  logActivity(null,null,null,null,null,'Added phase "New Phase"');
+};
+window.removePhase=function(id){
+  S.phases=S.phases.filter(function(p){return p.id!==id;});
+  renderPhases();
+};
+window.updatePhaseField=function(id,field,val){
+  var p=S.phases.find(function(x){return x.id===id;}); if(!p) return;
+  p[field]=val;
+  if(field==='status'||field==='title') renderPhases();
+};
+window.addToothToPhase=function(id,sel){
+  var fdi=parseInt(sel.value); if(!fdi) return;
+  var p=S.phases.find(function(x){return x.id===id;}); if(!p) return;
+  if(p.teeth.indexOf(fdi)===-1) p.teeth.push(fdi);
+  sel.value='';
+  renderPhases();
+};
+window.removeToothFromPhase=function(id,fdi){
+  var p=S.phases.find(function(x){return x.id===id;}); if(!p) return;
+  p.teeth=p.teeth.filter(function(f){return f!==fdi;});
+  renderPhases();
+};
+window.jumpToTooth=function(fdi){ selTooth(fdi); };
+
+function renderPhases(){
+  var el=$('phase-list'); if(!el) return;
+  var statusLabels={notstarted:'Not started',inprogress:'In progress',completed:'Completed'};
+  el.innerHTML=S.phases.map(function(p,i){
+    var toothOpts=ALL.filter(function(f){return p.teeth.indexOf(f)===-1;})
+      .map(function(f){return '<option value="'+f+'">'+f+' — '+(NAMES[f]||'')+'</option>';}).join('');
+    var chips=p.teeth.map(function(f){
+      return '<span class="pchip" onclick="jumpToTooth('+f+')">'+f
+        +'<button onclick="event.stopPropagation();removeToothFromPhase('+p.id+','+f+')">✕</button></span>';
+    }).join('') || '<span style="font-size:10px;color:var(--t4)">No teeth assigned</span>';
+    return '<div class="phase-card">'
+      +'<div class="phase-hd">'
+        +'<div class="phase-num">'+(i+1)+'</div>'
+        +'<input class="phase-title-inp" value="'+p.title.replace(/"/g,'&quot;')+'" onchange="updatePhaseField('+p.id+',\'title\',this.value)">'
+        +'<button class="phase-del" onclick="removePhase('+p.id+')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      +'</div>'
+      +'<div class="phase-body">'
+        +'<div class="phase-row">'
+          +'<select class="phase-status" onchange="updatePhaseField('+p.id+',\'status\',this.value)">'
+            +['notstarted','inprogress','completed'].map(function(s){return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+statusLabels[s]+'</option>';}).join('')
+          +'</select>'
+          +'<input class="phase-date" type="text" placeholder="Visit date" value="'+(p.date||'').replace(/"/g,'&quot;')+'" onchange="updatePhaseField('+p.id+',\'date\',this.value)">'
+        +'</div>'
+        +'<textarea class="phase-notes" placeholder="Notes for this phase…" onchange="updatePhaseField('+p.id+',\'notes\',this.value)">'+(p.notes||'')+'</textarea>'
+        +'<div class="phase-teeth-lbl">Assigned teeth <span class="status-pill status-'+p.status+'">'+statusLabels[p.status]+'</span></div>'
+        +'<div class="phase-teeth">'+chips+'</div>'
+        +'<div class="phase-add-tooth"><select onchange="if(this.value)addToothToPhase('+p.id+',this)"><option value="">+ add tooth…</option>'+toothOpts+'</select></div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   BEFORE / AFTER — Compare view + snapshot capture
+══════════════════════════════════════════════════════════ */
+function renderCompare(){
+  var changed=ALL.filter(function(f){var t=S.teeth[f]; return t&&t.tx&&t.tx!=='none';});
+  text('cmp-total',String(changed.length));
+  text('cmp-pct',S.ba+'%');
+  var el=$('cmp-list'); if(!el) return;
+  if(!changed.length){
+    el.innerHTML='<div class="cmp-empty">No treatments planned yet.<br>Select teeth in Treatment Plan to add proposed care.</div>';
+    return;
+  }
+  el.innerHTML=changed.map(function(f){
+    var t=S.teeth[f];
+    return '<div class="cmp-row" onclick="jumpToTooth('+f+')">'
+      +'<span class="cmp-fdi">'+f+'</span>'
+      +'<span class="cmp-arrow"><span class="cmp-from">'+(t.cond||'sound')+'</span><span class="cmp-sep">→</span><span class="cmp-to">'+t.tx.replace(/_p/,'').replace(/_/,' ')+'</span></span>'
+    +'</div>';
+  }).join('');
+}
+window.captureSnapshot=function(){
+  if(!rnd) return;
+  try{
+    var url=rnd.domElement.toDataURL('image/png');
+    var a=document.createElement('a');
+    a.href=url; a.download='dentaviz-comparison-'+S.ba+'pct.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }catch(e){ console.warn('[DentaViz] snapshot failed',e); }
+};
+
+/* ══════════════════════════════════════════════════════════
+   PATIENT VIEW — friendly, read-only
+══════════════════════════════════════════════════════════ */
+var FRIENDLY_COND={sound:'healthy',caries:'has some decay',restored:'has an existing filling',crown:'has an existing crown',missing:'is missing',implant:'has an implant',unerupted:'has not come in yet'};
+var FRIENDLY_TX={none:'',composite:'a tooth-coloured filling',crown_p:'a porcelain crown',pfm:'a crown',extraction:'removal',implant_p:'an implant and crown',veneer:'a veneer',endo:'a root canal treatment',bridge:'a bridge',watch:'monitoring at your next visit'};
+function renderPatientSummary(){
+  var vs=Object.values(S.teeth);
+  var attention=ALL.filter(function(f){var t=S.teeth[f]; return t&&((t.cond&&t.cond!=='sound')||(t.tx&&t.tx!=='none'));}).length;
+  text('pv-healthy',String(32-attention));
+  text('pv-attention',String(attention));
+}
+function renderPatientTooth(f){
+  var s=S.teeth[f]||{cond:'sound',tx:'none'};
+  var name=NAMES[f]||'tooth';
+  var condTxt=FRIENDLY_COND[s.cond||'sound']||'healthy';
+  var txTxt=FRIENDLY_TX[s.tx||'none']||'';
+  var sentence='Your '+name.toLowerCase()+' (tooth #'+f+') is '+condTxt+'.';
+  if(txTxt) sentence+=' Your dentist has recommended '+txTxt+' for this tooth.';
+  else if((s.cond||'sound')==='sound') sentence+=' No treatment is needed right now.';
+  text('pv-intro','');
+  var el=$('pv-content'); if(!el) return;
+  el.innerHTML='<div class="pv-card"><div class="pv-fdi">'+f+'</div><div class="pv-name">'+name+'</div><div class="pv-text">'+sentence+'</div></div>'
+    +'<div class="sec-title" style="margin:0 14px 8px">All your teeth</div>'
+    +'<div class="pv-legend-item"><div class="pv-legend-sw" style="background:#e8e2d5"></div><div class="pv-legend-t">Healthy tooth</div></div>'
+    +'<div class="pv-legend-item"><div class="pv-legend-sw" style="background:#6b2b0d"></div><div class="pv-legend-t">Needs treatment (decay)</div></div>'
+    +'<div class="pv-legend-item"><div class="pv-legend-sw" style="background:#4f8ff7"></div><div class="pv-legend-t">Treatment being planned</div></div>'
+    +'<div class="pv-legend-item"><div class="pv-legend-sw" style="background:#181e2c;border:1px dashed #3d4e68"></div><div class="pv-legend-t">Missing tooth</div></div>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   CLINICAL ADVISORIES — simple intelligence layer
+══════════════════════════════════════════════════════════ */
+function computeAdvisories(){
+  var out=[];
+  ALL.forEach(function(f){
+    var s=S.teeth[f]; if(!s) return;
+    if(s.cond==='missing'&&(!s.tx||['implant_p','bridge'].indexOf(s.tx)===-1)){
+      out.push({sev:'warn',fdi:f,text:'Tooth <b>'+f+'</b> is missing with no replacement planned — consider implant or bridge.'});
+    }
+    if(s.tx==='extraction'){
+      out.push({sev:'info',fdi:f,text:'Tooth <b>'+f+'</b> is planned for extraction — consider a replacement plan after healing.'});
+    }
+    if(s.cond==='sound'&&s.tx==='extraction'){
+      out.push({sev:'warn',fdi:f,text:'Tooth <b>'+f+'</b> is marked sound but extraction is planned — please verify.'});
+    }
+  });
+  /* Adjacent-to-missing drift risk */
+  ALL.forEach(function(f){
+    var s=S.teeth[f];
+    if(s&&s.cond==='missing'&&(!s.tx||s.tx==='none')){
+      adjacentOf(f).forEach(function(adj){
+        out.push({sev:'info',fdi:adj,text:'Tooth <b>'+adj+'</b> is adjacent to missing tooth '+f+' — monitor for drift.'});
+      });
+    }
+  });
+  return out;
+}
+function renderAdvisories(){
+  var el=$('advisory-list'); if(!el) return;
+  var adv=computeAdvisories();
+  if(!adv.length){ el.innerHTML='<div class="adv-empty">No advisories — plan looks consistent.</div>'; return; }
+  el.innerHTML=adv.map(function(a){
+    var ic=a.sev==='warn'
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    return '<div class="adv-card adv-'+a.sev+'" onclick="jumpToTooth('+a.fdi+')"><span class="adv-ic">'+ic+'</span><span class="adv-txt">'+a.text+'</span></div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILTERED TEETH — stat card drill-down
+══════════════════════════════════════════════════════════ */
+window.filterTeeth=function(type){
+  S.filter=type;
+  var labels={sound:'Sound teeth',caries:'Caries',planned:'Planned treatment',missing:'Missing teeth'};
+  text('filt-title',labels[type]||'Filtered');
+  show('filt-section');
+  renderFilteredChips();
+};
+window.clearFilter=function(){ S.filter=null; hide('filt-section'); };
+function renderFilteredChips(){
+  if(!S.filter) return;
+  var matches=ALL.filter(function(f){
+    var s=S.teeth[f]||{cond:'sound'};
+    if(S.filter==='sound') return (s.cond||'sound')==='sound';
+    if(S.filter==='caries') return s.cond==='caries';
+    if(S.filter==='planned') return s.tx&&s.tx!=='none';
+    if(S.filter==='missing') return s.cond==='missing';
+    return false;
+  });
+  var el=$('filt-chips'); if(!el) return;
+  el.innerHTML=matches.map(function(f){return '<span class="fchip" onclick="jumpToTooth('+f+')">'+f+'</span>';}).join('')
+    || '<span style="font-size:10.5px;color:var(--t4)">None</span>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   RELATED TEETH — adjacency, opposing, bridge grouping
+══════════════════════════════════════════════════════════ */
+function renderRelated(f){
+  var adj=adjacentOf(f);
+  var adjEl=$('rel-adjacent');
+  if(adjEl) adjEl.innerHTML=adj.length
+    ? adj.map(function(a){return '<span class="rchip" onclick="jumpToTooth('+a+')">'+a+'</span>';}).join('')
+    : '<span class="rchip none">edge of arch</span>';
+
+  var opp=opposingOf(f);
+  var oppEl=$('rel-opposing');
+  if(oppEl) oppEl.innerHTML=opp?'<span class="rchip" onclick="jumpToTooth('+opp+')">'+opp+'</span>':'<span class="rchip none">—</span>';
+
+  var s=S.teeth[f]||{};
+  var bridgeRow=$('rel-bridge-row');
+  if(s.tx==='bridge'){
+    show2(bridgeRow);
+    var group=S.relations[f]&&S.relations[f].bridge||[];
+    var bEl=$('rel-bridge');
+    if(bEl){
+      var opts=adj.map(function(a){
+        var on=group.indexOf(a)>-1;
+        return '<span class="rchip'+(on?' on':'')+'" onclick="toggleBridgeMember('+f+','+a+')">'+a+'</span>';
+      }).join('');
+      bEl.innerHTML=opts||'<span class="rchip none">no adjacent teeth</span>';
+    }
+  } else if(bridgeRow){ bridgeRow.style.display='none'; }
+}
+function show2(el){ if(el) el.style.display='flex'; }
+window.toggleBridgeMember=function(f,a){
+  if(!S.relations[f]) S.relations[f]={bridge:[]};
+  var g=S.relations[f].bridge;
+  var idx=g.indexOf(a);
+  if(idx>-1) g.splice(idx,1); else g.push(a);
+  renderRelated(f);
+};
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVITY LOG — audit trail
+══════════════════════════════════════════════════════════ */
+function logActivity(fdi,prevCond,prevTx,newCond,newTx,customTxt){
+  var txt;
+  if(customTxt){ txt=customTxt; }
+  else{
+    var parts=[];
+    if(prevCond!==newCond) parts.push('condition → <b>'+newCond+'</b>');
+    if(prevTx!==newTx) parts.push('treatment → <b>'+(newTx&&newTx!=='none'?newTx.replace(/_/,' '):'none')+'</b>');
+    txt='Tooth <b>'+fdi+'</b> updated: '+(parts.join(', ')||'note saved');
+  }
+  S.activity.unshift({t:Date.now(),fdi:fdi,txt:txt});
+  if(S.activity.length>200) S.activity.length=200;
+}
+function relTime(ts){
+  var s=Math.floor((Date.now()-ts)/1000);
+  if(s<10) return 'just now';
+  if(s<60) return s+'s ago';
+  var m=Math.floor(s/60); if(m<60) return m+'m ago';
+  var h=Math.floor(m/60); if(h<24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+function renderActivity(){
+  var el=$('activity-list'); if(!el) return;
+  if(!S.activity.length){ el.innerHTML='<div class="act-empty">No changes recorded yet.<br>Every saved edit appears here.</div>'; return; }
+  el.innerHTML=S.activity.map(function(a){
+    return '<div class="act-item"'+(a.fdi?' onclick="jumpToTooth('+a.fdi+')"':'')+'>'
+      +'<span class="act-dot"></span>'
+      +'<div class="act-body"><div class="act-txt">'+a.txt+'</div><div class="act-time">'+relTime(a.t)+'</div></div>'
+    +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PATIENT INFO POPOVER
+══════════════════════════════════════════════════════════ */
+window.togglePatPop=function(e){
+  if(e) e.stopPropagation();
+  var pop=$('pat-pop'); if(!pop) return;
+  pop.style.display=(pop.style.display==='block')?'none':'block';
+};
+document.addEventListener('click',function(e){
+  var pop=$('pat-pop'); if(!pop||pop.style.display!=='block') return;
+  if(!pop.contains(e.target) && !e.target.closest('.pat-chip')) pop.style.display='none';
+});
+window.updatePatient=function(){
+  S.patient.name=$('pat-in-name').value||'Demo Patient';
+  S.patient.chart=$('pat-in-chart').value||'';
+  S.patient.dob=$('pat-in-dob').value||'';
+  text('pat-name-disp',S.patient.name);
+  text('pat-meta-disp',S.patient.chart?('Chart '+S.patient.chart):'No chart #');
+  var av=$('pat-av');
+  if(av){ var initials=S.patient.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase(); av.textContent=initials||'DP'; }
+};
+
 /* ── boot ── */
 function boot(){
   if(typeof THREE==='undefined'){text('sb-main','❌ Three.js failed to load');return;}
@@ -1508,8 +2040,10 @@ function boot(){
   if(typeof THREE.OrbitControls==='undefined'){text('sb-main','❌ OrbitControls failed — check network');return;}
   initThree();
   seed();
+  S.phases=defaultPhases();
   updStats(); updCount();
   buildStageList();
+  renderAdvisories();
   autoLoadModel();
   // Notify Bubble parent iframe that viewer is ready
   setTimeout(function(){ try{ parent.postMessage({type:'dv:ready'},'*'); }catch(e){} }, 800);
