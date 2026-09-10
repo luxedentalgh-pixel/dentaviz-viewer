@@ -1330,6 +1330,34 @@ function seed(){
   updStats(); updCount();
 }
 
+/* ── automatic hosted model loader ── */
+function autoLoadModel(){
+  var prog=$('ld-prog'), bar=$('ld-bar'), msg=$('ld-msg');
+
+  if(prog) prog.style.display='block';
+  if(bar) bar.style.width='15%';
+  if(msg) msg.textContent='Loading dental model…';
+
+  fetch('./teeth_library.glb')
+    .then(function(response){
+      if(!response.ok){
+        throw new Error('Could not load teeth_library.glb ('+response.status+')');
+      }
+
+      if(bar) bar.style.width='45%';
+      return response.arrayBuffer();
+    })
+    .then(function(buffer){
+      if(bar) bar.style.width='60%';
+      loadGLB(buffer,'teeth_library.glb');
+    })
+    .catch(function(err){
+      console.error('Automatic model load failed:',err);
+      if(msg) msg.textContent='❌ Automatic model load failed — use Load Model to select the GLB.';
+      if(bar) bar.style.width='0%';
+    });
+}
+
 /* ── boot ── */
 function boot(){
   if(typeof THREE==='undefined'){text('sb-main','❌ Three.js failed to load');return;}
@@ -1339,6 +1367,7 @@ function boot(){
   seed();
   updStats(); updCount();
   buildStageList();
+  autoLoadModel();
 }
 
 if(document.readyState==='complete') boot();
