@@ -456,8 +456,9 @@ textarea.fd{resize:none;height:58px;line-height:1.55;font-size:12px}
 
   <!-- View tools -->
   <div class="glass" id="vtools">
-    <div class="vt on" onclick="tgl('gum',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12c0-3 2-5 5-5s4 2 4 5 2 5 4 5 5-2 5-5"/></svg></span>Gum<span class="vtoggle"></span></div>
+    <div class="vt" onclick="tgl('gum',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12c0-3 2-5 5-5s4 2 4 5 2 5 4 5 5-2 5-5"/></svg></span>Gum<span class="vtoggle"></span></div>
     <div class="vt" onclick="tgl('xray',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span>X-ray<span class="vtoggle"></span></div>
+    <div class="vt" onclick="tgl('roots',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8 2 6 5 6 9c0 3 1 5 1 8s1 5 2 5 2-3 2-5 .5-3 1-3 1 1 1 3 .5 5 2 5 2-2 2-5 1-5 1-8c0-4-2-7-6-7z"/></svg></span>Show Roots<span class="vtoggle"></span></div>
     <div class="vt" onclick="tgl('explode',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M2 12h6M16 12h6"/></svg></span>Explode<span class="vtoggle"></span></div>
     <div class="vt" onclick="tgl('wire',this)"><span class="vt-ic"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span>Wireframe<span class="vtoggle"></span></div>
   </div>
@@ -763,7 +764,7 @@ function rgb(c){return 'rgb('+Math.round(c[0]*255)+','+Math.round(c[1]*255)+','+
 /* ── state ── */
 var S={
   sel:null, ba:0,
-  gum:true, xray:false, explode:false, wire:false,
+  gum:false, xray:false, roots:false, explode:false, wire:false,
   teeth:{}, surfs:{},
   mode:'plan',
   phases:[], activity:[], relations:{}, filter:null,
@@ -840,7 +841,8 @@ var rnd,scn,cam,ctrl,clk,rc,ms,pmremGen;
 var MODEL=null;           // THREE.Group — loaded gltf root
 var TEETH={};             // fdi -> {mesh, mat, origC, pos, size}
 var GUM=null;             // THREE.Group
-var SEL_RING=null;        // the ONE selection ring, repositioned on select
+var SEL_RING=null;        // unused — kept for compat
+var SEL_OUTLINE=null;     // outline clone of selected tooth
 var ff=0,ft=0;
 var modelBox=new THREE.Box3(), modelCtr=new THREE.Vector3(), modelRad=1;
 var modelLoaded=false;
@@ -987,15 +989,9 @@ function initThree(){
   CONTACT_SHADOW.renderOrder=-1;
   scn.add(CONTACT_SHADOW);
 
-  /* Selection ring — ONE ring, repositioned when selection changes */
-  var ringGeo=new THREE.TorusGeometry(1,0.035,16,60);
-  var ringMat=new THREE.MeshBasicMaterial({
-    color:0x60a5fa, transparent:true, opacity:0, depthWrite:false
-  });
-  SEL_RING=new THREE.Mesh(ringGeo,ringMat);
-  SEL_RING.visible=false;
-  SEL_RING.renderOrder=10;
-  scn.add(SEL_RING);
+  /* Selection highlight — scale-up outline mesh per selected tooth */
+  SEL_RING=null; // replaced by per-tooth outline in selTooth()
+  SEL_OUTLINE=null; // clone of selected tooth mesh scaled up + inverted normals
 
   /* Orbit controls */
   ctrl=new THREE.OrbitControls(cam,rnd.domElement);
@@ -1132,10 +1128,10 @@ function loadGLB(arrayBuffer, fileName){
 
 /* ── frame camera to model ── */
 function frameModel(){
-  var d=modelRad/Math.tan(cam.fov*Math.PI/360)*1.6;
+  var d=modelRad/Math.tan(cam.fov*Math.PI/360)*1.45;
   ctrl.target.copy(modelCtr);
-  cam.position.set(modelCtr.x, modelCtr.y+modelRad*0.3, modelCtr.z+d);
-  cam.near=modelRad*0.01; cam.far=modelRad*60;
+  cam.position.set(modelCtr.x, modelCtr.y+modelRad*0.22, modelCtr.z+d*1.05);
+  cam.near=modelRad*0.005; cam.far=modelRad*80;
   cam.updateProjectionMatrix();
   ctrl.update();
 }
@@ -1164,10 +1160,18 @@ function applyOne(f){
     }
   }
 
-  /* X-ray */
-  mat.transparent=S.xray;
-  mat.opacity=S.xray?0.32:1.0;
-  if(S.xray){ mat.color.setRGB(0.35,0.72,1.0); mat.roughness=0.1; mat.metalness=0.0; mat.clearcoat=0.3; }
+  /* X-ray — realistic translucent enamel */
+  mat.transparent=S.xray||false;
+  mat.opacity=S.xray?0.28:1.0;
+  mat.depthWrite=!S.xray;
+  if(S.xray){
+    mat.color.setRGB(0.7,0.88,1.0);
+    mat.roughness=0.05; mat.metalness=0.0;
+    if(mat.clearcoat!=null) mat.clearcoat=0.0;
+    if(mat.emissive) mat.emissive.setRGB(0.04,0.12,0.22);
+  } else {
+    if(mat.emissive && S.sel!==f) mat.emissive.setRGB(0,0,0);
+  }
 
   /* Wireframe */
   mat.wireframe=S.wire;
@@ -1188,11 +1192,25 @@ function applyOne(f){
 
   mat.needsUpdate=true;
 
-  /* Explode */
-  if(t.mesh.parent){
-    var baseY=t.homeY!=null?t.homeY:(t.homeY=t.mesh.parent.position.y);
-    var off=S.explode?(archOf(f)==='upper'?modelRad*0.55:-modelRad*0.55):0;
-    t.mesh.parent.position.y=baseY+off;
+  /* Explode — move each tooth radially outward from arch centre */
+  if(t.mesh && t.mesh.parent && t.pos){
+    var node=t.mesh.parent;
+    if(!t.homePos){
+      t.homePos={x:node.position.x,y:node.position.y,z:node.position.z};
+    }
+    if(S.explode){
+      /* Direction from arch centre (modelCtr) to tooth centroid */
+      var dx=t.pos.x-modelCtr.x, dy=t.pos.y-modelCtr.y, dz=t.pos.z-modelCtr.z;
+      var len=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
+      var factor=modelRad*0.7;
+      node.position.x=t.homePos.x+dx/len*factor;
+      node.position.y=t.homePos.y+dy/len*factor*0.5;
+      node.position.z=t.homePos.z+dz/len*factor;
+    } else {
+      node.position.x=t.homePos.x;
+      node.position.y=t.homePos.y;
+      node.position.z=t.homePos.z;
+    }
   }
 }
 function applyAll(){ALL.forEach(applyOne);}
@@ -1258,10 +1276,10 @@ function loop(){
 
   if(ctrl) ctrl.update();
 
-  /* Animate selection ring — pulse opacity + gentle scale */
-  if(S.sel && SEL_RING && SEL_RING.visible){
-    SEL_RING.material.opacity=0.55+Math.sin(t*3.2)*0.25;
-    /* Ring doesn't scale — fixed size set at selection time */
+  /* Pulse emissive on selected tooth */
+  if(S.sel && TEETH[S.sel] && TEETH[S.sel].mat && TEETH[S.sel].mat.emissive){
+    var pulse=0.1+Math.sin(t*3.2)*0.06;
+    TEETH[S.sel].mat.emissive.setRGB(pulse,pulse*2.5,pulse*5.5);
   }
 
   /* FPS */
@@ -1333,19 +1351,39 @@ function showTip(f,e){
 
 /* ── selection ── */
 function selTooth(f){
+  /* Clear emissive on previously selected tooth */
+  if(S.sel && S.sel!==f && TEETH[S.sel] && TEETH[S.sel].mat && TEETH[S.sel].mat.emissive){
+    TEETH[S.sel].mat.emissive.setRGB(0,0,0);
+  }
   S.sel=f;
   var t=TEETH[f];
 
-  /* Position the selection ring at this tooth's centroid */
-  if(t && t.pos && SEL_RING){
-    SEL_RING.position.copy(t.pos);
-    /* Orient ring horizontal (XZ plane) */
-    SEL_RING.rotation.set(Math.PI/2,0,0);
-    /* Scale ring to tooth radius + 20% margin */
-    var r=Math.max(t.rxy||0.5, modelRad*0.04)*1.25;
-    SEL_RING.scale.setScalar(r);
-    SEL_RING.visible=true;
-    SEL_RING.material.opacity=0.6;
+  /* Outline selection — remove old, build new */
+  if(SEL_OUTLINE){ scn.remove(SEL_OUTLINE); SEL_OUTLINE=null; }
+  if(t && t.mesh && t.mesh.geometry){
+    var outMat=new THREE.MeshBasicMaterial({
+      color:0x60a5fa, side:THREE.BackSide,
+      transparent:true, opacity:0.85, depthWrite:false
+    });
+    SEL_OUTLINE=new THREE.Mesh(t.mesh.geometry, outMat);
+    SEL_OUTLINE.renderOrder=5;
+    SEL_OUTLINE.scale.setScalar(1.045); // 4.5% bigger = clean outline
+    /* Copy world transform of the mesh */
+    t.mesh.getWorldPosition(SEL_OUTLINE.position);
+    t.mesh.getWorldQuaternion(SEL_OUTLINE.quaternion);
+    t.mesh.getWorldScale(new THREE.Vector3())
+      .multiplyScalar(1.045);
+    /* Simpler: add as child of mesh parent so transforms sync */
+    if(t.mesh.parent){
+      t.mesh.parent.add(SEL_OUTLINE);
+      SEL_OUTLINE.position.set(0,0,0);
+      SEL_OUTLINE.quaternion.identity();
+    } else {
+      scn.add(SEL_OUTLINE);
+      SEL_OUTLINE.position.copy(t.pos||new THREE.Vector3());
+    }
+    /* Also emit emissive glow on the tooth */
+    if(t.mat && t.mat.emissive) t.mat.emissive.setRGB(0.1,0.25,0.55);
   }
 
   /* Panel */
@@ -1390,7 +1428,9 @@ function selTooth(f){
 
 window.clearSel=function(){
   S.sel=null;
-  if(SEL_RING) SEL_RING.visible=false;
+  if(SEL_OUTLINE){ if(SEL_OUTLINE.parent) SEL_OUTLINE.parent.remove(SEL_OUTLINE); else scn.remove(SEL_OUTLINE); SEL_OUTLINE=null; }
+  /* Remove emissive from previously selected tooth */
+  if(S.sel && TEETH[S.sel] && TEETH[S.sel].mat && TEETH[S.sel].mat.emissive) TEETH[S.sel].mat.emissive.setRGB(0,0,0);
   hide('hud'); hide('te-editor'); show('te-empty');
   text('sb-sel','No selection');
   try{ parent.postMessage({type:'dv:clearSel'},'*'); }catch(ex){}
@@ -1500,12 +1540,36 @@ window.onBA=function(v){
 /* ── view toggles ── */
 window.tgl=function(opt,el){
   S[opt]=!S[opt]; el.classList.toggle('on',S[opt]);
-  if(opt==='gum') buildGum();
-  else if(opt==='xray'){
-    scn.background.set(S.xray?0x001428:0x07090f);
-    scn.fog.density=S.xray?0:0.022;
+  if(opt==='gum'){
+    buildGum();
+  } else if(opt==='xray'){
+    scn.background.set(S.xray?0x000814:0x07090f);
+    if(scn.fog) scn.fog.density=S.xray?0:0.018;
+    rnd.sortObjects=S.xray;
     applyAll();
-  } else applyAll();
+  } else if(opt==='roots'){
+    if(GUM){ GUM.traverse(function(o){
+      if(o.isMesh){
+        o.material.transparent=S.roots;
+        o.material.opacity=S.roots?0.28:1.0;
+        o.material.depthWrite=!S.roots;
+        o.material.needsUpdate=true;
+      }
+    }); }
+    /* Also show gum if roots requested */
+    if(S.roots && !S.gum){
+      S.gum=true;
+      buildGum();
+      if(GUM){ GUM.traverse(function(o){
+        if(o.isMesh){ o.material.transparent=true; o.material.opacity=0.28; o.material.depthWrite=false; o.material.needsUpdate=true; }
+      }); }
+    }
+  } else if(opt==='explode'){
+    applyAll();
+    buildGum(); /* reposition gum with exploded teeth */
+  } else {
+    applyAll();
+  }
 };
 
 /* ── camera presets ── */
